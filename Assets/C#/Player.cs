@@ -8,8 +8,8 @@ public class Player : MonoBehaviour
     
     
     
-    public float TorchSearchRadius = 50f;
-    public float SendFairyAngle = 30.0f;
+    public float TorchSearchRadius = 45f;
+    public float SendFairyAngle = 25.0f;
     public Fairy FairyRef;
     
     // Start is called before the first frame update

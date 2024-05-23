@@ -11,7 +11,7 @@ public class Torch : MonoBehaviour
     {
         if (bStartLit)
         {
-            bLit = true;
+            Light();
             return;
         }
         // Find the child GameObject named "Torchlight"
@@ -39,6 +39,8 @@ public class Torch : MonoBehaviour
             // Enable the Torchlight GameObject
             smolder.SetActive(true);
         }
+        
+        
     }
 
     // Update is called once per frame
@@ -72,6 +74,18 @@ public class Torch : MonoBehaviour
         else
         {
             Debug.LogWarning("Torchlight or Smolder GameObject not found in children.");
+        }
+        
+        // Get the first nested Light component in the children of the game object
+        Light areaLight = torchlightTransform.gameObject.GetComponentInChildren<Light>();
+
+        if (areaLight != null)
+        {   
+            // Generate a random value between 0 and 500
+            float randomValue = Random.Range(0f, 750f);
+
+            // Add the random value to the light's intensity
+            areaLight.colorTemperature += randomValue;
         }
     }
 }

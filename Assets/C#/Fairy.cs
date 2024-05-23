@@ -16,7 +16,6 @@ public class Fairy : MonoBehaviour
     public float TorchActivationRange = 5f;
     public Transform PlayerTransform;
     private UnityFlock Controller;
-    private bool bTorchLit = false;
 
     void Start()
     {
@@ -28,17 +27,16 @@ public class Fairy : MonoBehaviour
     void Update()
     {
         TryLightTorch();
-        TryGoIdle();
     }
 
     public void GoFairy(Transform destination)
     {
         if (FairyState == EFairyState.Idle)
         {
-            bTorchLit = false;
             FairyState = EFairyState.Moving;
             print("moving");
             Controller.SetOrigin(destination);
+            StartCoroutine(CheckTorchStatus(destination.GetComponent<Torch>())); //if torch is not lit in 6 seconds we set the fairy idle and reset its origin
         }
         else
         {
@@ -62,25 +60,12 @@ public class Fairy : MonoBehaviour
                         print("in range to light");
                         // Call the Light() function on the Torch component
                         Controller.GetOrigin().GetComponent<Torch>().Light();
-
+                        
                         // Set the origin to playerTransform
                         Controller.SetOrigin(PlayerTransform);
-
-                        bTorchLit = true;
+                        FairyState = EFairyState.Idle;
                     }
                 }
-            }
-        }
-    }
-
-    public void TryGoIdle()
-    {
-        if (FairyState == EFairyState.Moving)
-        {
-            if (IsInIdleRange() && bTorchLit)
-            {
-                FairyState = EFairyState.Idle;
-                print("idle");
             }
         }
     }
@@ -90,5 +75,21 @@ public class Fairy : MonoBehaviour
     private bool IsInIdleRange()
     {
         return Vector3.Distance(PlayerTransform.position, transform.position) < IdleRange;
+    }
+    
+    IEnumerator CheckTorchStatus(Torch checkTorch)
+    {
+        // Wait for 4 seconds
+        yield return new WaitForSeconds(6.0f);
+
+        Torch currentTorch = Controller.GetOrigin().GetComponent<Torch>();
+        
+        // Check if the torch is still not lit
+        if (currentTorch != null && currentTorch.bLit == false && currentTorch == checkTorch)
+        {
+            // Set the Controller.origin to PlayerTransform
+            Controller.SetOrigin(PlayerTransform);
+            FairyState = EFairyState.Idle;
+        }
     }
 }
