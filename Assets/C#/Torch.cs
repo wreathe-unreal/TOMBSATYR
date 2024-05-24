@@ -82,7 +82,7 @@ public class Torch : MonoBehaviour
         if (areaLight != null)
         {   
             // Generate a random value between 0 and 500
-            float randomValue = Random.Range(0f, 750f);
+            float randomValue = Random.Range(0f, 400f);
 
             // Add the random value to the light's intensity
             areaLight.colorTemperature += randomValue;
