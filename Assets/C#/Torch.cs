@@ -68,14 +68,8 @@ public class Torch : MonoBehaviour
             // Enable the Torchlight GameObject
             torchlight.SetActive(true);
             smolder.SetActive(false);
+        }
 
-            Debug.Log("Torchlight enabled.");
-        }
-        else
-        {
-            Debug.LogWarning("Torchlight or Smolder GameObject not found in children.");
-        }
-        
         // Get the first nested Light component in the children of the game object
         Light areaLight = torchlightTransform.gameObject.GetComponentInChildren<Light>();
 

@@ -154,7 +154,12 @@ public class UnityFlock : MonoBehaviour
         velocity = Vector3.RotateTowards(velocity, wantedVel, turnSpeed * Time.deltaTime, 100.00f);
 
         
-        transformComponent.rotation = Quaternion.LookRotation(velocity);
+        // Calculate the new rotation while keeping the bird upright
+        Quaternion lookRotation = Quaternion.LookRotation(velocity);
+        Quaternion uprightRotation = Quaternion.Euler(0, lookRotation.eulerAngles.y, 0); // Keep the bird upright
+
+        // Blend between the two rotations
+        transformComponent.rotation = Quaternion.Slerp(lookRotation, uprightRotation, 0.5f);
 
         velocity.x = Mathf.Clamp(velocity.x, -10f, 10f);
         velocity.y = Mathf.Clamp(velocity.y, -10f, 10f);

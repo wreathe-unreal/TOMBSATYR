@@ -14,19 +14,24 @@ public class Fairy : MonoBehaviour
     private EFairyState FairyState;
     public float IdleRange = 5f;
     public float TorchActivationRange = 5f;
-    public Transform PlayerTransform;
-    private UnityFlock Controller;
+    public Transform OrbitLocation;
+    private UnityFlock BoidsController;
+    private Player PlayerRef;
+    private bool bUnstuckCoroActive;
 
     void Start()
     {
-        Controller = GetComponentInChildren<UnityFlock>();
+        PlayerRef = FindObjectOfType<Player>();
+        BoidsController = GetComponentInChildren<UnityFlock>();
         FairyState = EFairyState.Idle;
-        PlayerTransform = FindObjectOfType<UnityFlockController>().transform;
+        OrbitLocation = FindObjectOfType<UnityFlockController>().transform;
     }
 
     void Update()
     {
+        CheckDistanceToPlayer();
         TryLightTorch();
+        
     }
 
     public void GoFairy(Transform destination)
@@ -34,9 +39,10 @@ public class Fairy : MonoBehaviour
         if (FairyState == EFairyState.Idle)
         {
             FairyState = EFairyState.Moving;
-            print("moving");
-            Controller.SetOrigin(destination);
-            StartCoroutine(CheckTorchStatus(destination.GetComponent<Torch>())); //if torch is not lit in 6 seconds we set the fairy idle and reset its origin
+            BoidsController.SetOrigin(destination);
+            
+            //coro: if torch is not lit in 6 seconds we set the fairy idle and reset its origin
+            StartCoroutine(CheckTorchStatus(destination.GetComponent<Torch>())); 
         }
         else
         {
@@ -48,21 +54,14 @@ public class Fairy : MonoBehaviour
     {
         if (FairyState == EFairyState.Moving)
         {
-            // Check if origin is not the player, is within range, and has a Torch component
-            if (Controller.GetOrigin() != PlayerTransform)
+            if (BoidsController.GetOrigin() != OrbitLocation)
             {
-                print("orbit location not player");
-                if (Controller.GetOrigin().GetComponent<Torch>() != null)
+                if (BoidsController.GetOrigin().GetComponent<Torch>() != null)
                 {
-                    print("orbit location is torch");
-                    if (Vector3.Distance(transform.position, Controller.GetOrigin().transform.position) <= TorchActivationRange)
+                    if (Vector3.Distance(transform.position, BoidsController.GetOrigin().transform.position) <= TorchActivationRange)
                     {
-                        print("in range to light");
-                        // Call the Light() function on the Torch component
-                        Controller.GetOrigin().GetComponent<Torch>().Light();
-                        
-                        // Set the origin to playerTransform
-                        Controller.SetOrigin(PlayerTransform);
+                        BoidsController.GetOrigin().GetComponent<Torch>().Light();
+                        BoidsController.SetOrigin(OrbitLocation);
                         FairyState = EFairyState.Idle;
                     }
                 }
@@ -74,7 +73,7 @@ public class Fairy : MonoBehaviour
 
     private bool IsInIdleRange()
     {
-        return Vector3.Distance(PlayerTransform.position, transform.position) < IdleRange;
+        return Vector3.Distance(OrbitLocation.position, transform.position) < IdleRange;
     }
     
     IEnumerator CheckTorchStatus(Torch checkTorch)
@@ -82,14 +81,52 @@ public class Fairy : MonoBehaviour
         // Wait for 4 seconds
         yield return new WaitForSeconds(6.0f);
 
-        Torch currentTorch = Controller.GetOrigin().GetComponent<Torch>();
+        Torch currentTorch = BoidsController.GetOrigin().GetComponent<Torch>();
         
         // Check if the torch is still not lit
         if (currentTorch != null && currentTorch.bLit == false && currentTorch == checkTorch)
         {
             // Set the Controller.origin to PlayerTransform
-            Controller.SetOrigin(PlayerTransform);
+            BoidsController.SetOrigin(OrbitLocation);
             FairyState = EFairyState.Idle;
         }
     }
+
+    public void TeleportToPlayer()
+    {
+        Vector3 newPosition = PlayerRef.Controller.transform.position;
+        newPosition.y += 1.5f;
+        newPosition.x += 2f;
+        transform.position = newPosition;
+        transform.rotation = PlayerRef.Controller.transform.rotation;
+        FairyState = EFairyState.Idle;
+    }
+
+    public void CheckDistanceToPlayer()
+    {
+        if (FairyState == EFairyState.Idle && Vector3.Distance(PlayerRef.Controller.transform.position, transform.position) > 15f)
+        {
+            if (!bUnstuckCoroActive)
+            {
+                StartCoroutine(Unstuck());
+            }
+        }
+    }
+
+    IEnumerator Unstuck()
+    {
+        bUnstuckCoroActive = true;
+
+        // Wait for 6 seconds
+        yield return new WaitForSeconds(6.0f);
+
+        // Check the condition again after waiting
+        if (FairyState == EFairyState.Idle && Vector3.Distance(PlayerRef.Controller.transform.position, transform.position) > 15f)
+        {
+            TeleportToPlayer();
+        }
+
+        bUnstuckCoroActive = false;
+    }
+
 }

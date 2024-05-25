@@ -3,18 +3,19 @@ using System.Collections;
 using System.Collections.Generic;
 using Lightbug.CharacterControllerPro.Core;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 public class Player : MonoBehaviour
 {
-    
-    
-    
     public CharacterActor Controller;
     public int Health;
     public float TorchSearchRadius = 45f;
+    public float CheckpointSearchRadius = 90f;
     public float SendFairyAngle = 25.0f;
+    public float CheckpointTravelAngle = 10f;
     public Fairy FairyRef;
-    
+    public Checkpoint CurrentCheckpoint;
+    public Resetpoint CurrentResetpoint;
     private const int HEALTH_MAX = 20;
     private const int HEALTH_MIN = 0;
     
@@ -23,6 +24,17 @@ public class Player : MonoBehaviour
     {
         Health = HEALTH_MAX;
         Controller.OnGroundedStateEnter += CalculateFallDamage;
+        Controller.OnGroundedStateExit += FindNearestResetpoint;
+    }
+    
+    
+    void Update()
+    {
+        if (Input.GetButtonDown("Fire1"))
+        {
+            FindCheckpointAndGo();
+            FindTorchSendFairy();
+        }
     }
 
     private void CalculateFallDamage(Vector3 velocity)
@@ -47,74 +59,153 @@ public class Player : MonoBehaviour
     {
         Health += modifier;
         Health = Mathf.Clamp(Health, HEALTH_MIN, HEALTH_MAX);
+
+        if(Health == 0)
+        {
+            OnDeath();
+            return;
+        }
     }
+
+    private void OnReset()
+    {
+        if (CurrentCheckpoint != null)
+        {
+            FastTravel(CurrentResetpoint);
+        }
+        else
+        {
+            FindNearestResetpoint();
+        }
+    }
+
+    private void OnDeath()
+    {
+        if (CurrentCheckpoint != null)
+        {
+            FastTravel(CurrentCheckpoint);
+        }
+        else
+        {
+            FindCheckpointAndGo();
+        }
+    }
+
 
     public int GetHealth()
     {
         return Health;
     }
     
-    void Update()
+
+    private Resetpoint GetCurrentResetpoint()
     {
-        if (Input.GetButtonDown("Fire1"))
-        {
-            FindTorchSendFairy();
-        }
+        return CurrentResetpoint;
     }
 
+    private void SetCurrentResetpoint(Resetpoint newResetpoint)
+    {
+        CurrentResetpoint = newResetpoint;
+    }
+    
+    private Checkpoint GetCurrentCheckpoint()
+    {
+        return CurrentCheckpoint;
+    }
+
+    private void SetCurrentCheckpoint(Checkpoint newCheckpoint)
+    {
+        CurrentCheckpoint = newCheckpoint;
+        CurrentResetpoint = CurrentCheckpoint;
+    }
+    
+    public void FastTravel(Checkpoint checkpoint)
+    {
+        CurrentCheckpoint = checkpoint;
+        CurrentResetpoint = (Resetpoint)checkpoint;
+        
+        Controller.Teleport(CurrentCheckpoint.GetSpawn().position, CurrentCheckpoint.GetSpawn().rotation);
+
+        FairyRef.TeleportToPlayer();
+        
+        Health = HEALTH_MAX;
+    }
+    
+    public void FastTravel(Resetpoint resetpoint)
+    {
+        CurrentCheckpoint = (Checkpoint)resetpoint;
+        CurrentResetpoint = resetpoint;
+        
+        Controller.Teleport(CurrentCheckpoint.GetSpawn().position, CurrentCheckpoint.GetSpawn().rotation);
+
+        FairyRef.TeleportToPlayer();
+    }
+
+    
+    void FindCheckpointAndGo()
+    {
+        // Get the player's position
+        Vector3 playerPosition = Controller.transform.position;
+
+        List<Checkpoint> foundCheckpoints = Utils.FindObjects<Checkpoint>((obj) =>
+        {
+            return obj.bIsActivated && IsNearPlayer(obj.gameObject, CheckpointSearchRadius) 
+                                    && Camera.main.IsInView(obj.gameObject, CheckpointTravelAngle) 
+                                    && Camera.main.IsUnobstructed(obj.gameObject);
+
+        });
+
+        if (foundCheckpoints.Count > 0)
+        {
+            FastTravel(foundCheckpoints[0]);
+
+        }
+
+    }
+    
     void FindTorchSendFairy()
     {
         // Get the player's position
-        Vector3 playerPosition = FindObjectOfType<Lightbug.CharacterControllerPro.Core.CharacterActor>().transform.position;
+        Vector3 playerPosition = Controller.transform.position;
 
-        // Get all GameObjects with a Torch component
-        Torch[] allTorches = FindObjectsOfType<Torch>();
-
-        foreach (Torch torch in allTorches)
+        List<Torch> foundTorches = Utils.FindObjects<Torch>((obj) =>
         {
-            if (torch.bLit)
-            {
-                continue;
-            }
-            // Check if the torch is within the search radius
-            if (Vector3.Distance(playerPosition, torch.transform.position) <= TorchSearchRadius)
-            {
-                print("In Torch Search Radius");
-                // Calculate the dot product with the camera's forward vector
-                Vector3 toTorch = torch.transform.position - Camera.main.transform.position;
-                float dotProduct = Vector3.Dot(Camera.main.transform.forward, toTorch.normalized);
+            return !obj.bLit && IsNearPlayer(obj.gameObject, TorchSearchRadius) 
+                             && Camera.main.IsInView(obj.gameObject, SendFairyAngle) 
+                             && Camera.main.IsUnobstructed(obj.gameObject);
 
-                float angleToTorch = Mathf.Acos(dotProduct);
+        });
 
-                if (angleToTorch <= Mathf.Deg2Rad * SendFairyAngle)
-                {
-                    print("In Send Fairy Angle");
-
-                    Ray ray = new Ray(Camera.main.transform.position, toTorch);
-                    RaycastHit hit;
-                    
-                    LayerMask layerMask;
-                    layerMask = ~(1 << LayerMask.NameToLayer("Player"));
-                    
-                    
-                    if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
-                     {
-                         if (hit.transform.parent == torch.transform)
-                         {
-                            print("Raycast Hit Torch");
-                            // Call the goFairy method
-                            FairyRef.GoFairy(torch.transform);
-                            return;
-                       }
-                    }
-                    else
-                    {
-                        print("raycast failed");
-                    }
-
-                    print(hit.transform.name);
-                }
-            }
+        if (foundTorches.Count > 0)
+        {
+            FairyRef.GoFairy(foundTorches[0].transform);
         }
+    }
+
+    private void FindNearestResetpoint()
+    {
+        // Get the player's position
+        Vector3 playerPosition = Controller.transform.position;
+
+        CurrentResetpoint = Utils.FindMaxObject<Resetpoint>((currentMax, obj) =>
+        {
+            //resetpoint is activated and is nearer then return true
+            return obj.bIsActivated && Vector3.Distance(playerPosition, currentMax.transform.position) > Vector3.Distance(playerPosition, obj.transform.position);
+        });
+    }
+
+    private bool IsNearPlayer(GameObject obj, float radius)
+    {
+        // Get the player's position
+        Vector3 playerPosition = Controller.transform.position;
+
+        return Vector3.Distance(playerPosition, obj.transform.position) <= radius;
+    }
+
+
+    public void OnEnterCheckpoint(Checkpoint enteredCheckpoint)
+    {
+        CurrentCheckpoint = enteredCheckpoint;
+        UpdateHealth(20);
     }
 }
