@@ -27,7 +27,7 @@ public static class CameraExtensions
                     
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
         {
-            if (hit.collider.gameObject == obj || hit.collider.transform.parent.gameObject == obj)
+            if (hit.collider.gameObject == obj || (hit.collider.transform.parent.gameObject != null && hit.collider.transform.parent.gameObject == obj))
             {
                 return true;
             }

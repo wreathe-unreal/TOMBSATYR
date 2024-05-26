@@ -8,7 +8,6 @@ public class Checkpoint : Resetpoint
 {
     private Gem GemScript;
     private Coroutine RotationCoroutine = null;
-    private Player PlayerRef;
     private bool bNoCollision;
 
     
@@ -22,7 +21,6 @@ public class Checkpoint : Resetpoint
         base.Start();
         
         bNoCollision = true;
-        PlayerRef = FindObjectOfType<Player>();
         GemScript = GetComponentInChildren<Gem>();
     }
 

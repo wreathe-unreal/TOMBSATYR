@@ -5,9 +5,9 @@ using UnityEngine;
 
 public class Resetpoint : MonoBehaviour
 {
-    private Player PlayerRef;
+    protected Player PlayerRef;
     public bool bIsActivated;
-    private GameObject Spawn;
+    protected GameObject Spawn;
     
     protected virtual void Awake()
     {
