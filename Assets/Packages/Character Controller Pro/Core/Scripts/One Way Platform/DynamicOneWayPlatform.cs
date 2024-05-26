@@ -9,14 +9,24 @@ namespace Lightbug.CharacterControllerPro.Core
     [AddComponentMenu("Character Controller Pro/Core/Dynamic One Way Platform")]
     public class DynamicOneWayPlatform : MonoBehaviour
     {
+        // Layer mask to identify characters that can interact with the platform
         public LayerMask characterLayerMask = -1;
 
+        // Pre-simulation position of the platform
         protected Vector3 preSimulationPosition;
+        
+        // Coroutine for post-simulation update
         Coroutine postSimulationUpdateCoroutine = null;
+        
+        // Dictionary to keep track of characters interacting with the platform
         protected Dictionary<Transform, CharacterActor> characters = new Dictionary<Transform, CharacterActor>();
+        
+        // Components
         ColliderComponent colliderComponent;
         PhysicsComponent physicsComponent;
         RigidbodyComponent rigidbodyComponent;
+
+        public bool bAllowJumpThrough = false;
 
         void Awake()
         {
@@ -39,7 +49,7 @@ namespace Lightbug.CharacterControllerPro.Core
             }
         }
 
-
+        // Cast the platform's body and return the list of hit information
         protected List<HitInfo> CastPlatformBody(Vector3 castDisplacement)
         {
             float backstepDistance = 0.1f;
@@ -58,11 +68,14 @@ namespace Lightbug.CharacterControllerPro.Core
             );
         }
         
+        // Validate one-way platform collision
         protected bool ValidateOWPCollision(CharacterActor characterActor, Vector3 contactPoint) =>
-            characterActor.CheckOneWayPlatformCollision(contactPoint, characterActor.Position);
+            characterActor.CheckOneWayPlatformCollision(contactPoint, characterActor.Position) && bAllowJumpThrough;
 
+        // Save the platform's position before physics simulation
         void FixedUpdate() => preSimulationPosition = rigidbodyComponent.Position;
 
+        // Coroutine for updating the platform after physics simulation
         IEnumerator PostSimulationUpdate()
         {
             YieldInstruction waitForFixedUpdate = new WaitForFixedUpdate();
@@ -73,6 +86,7 @@ namespace Lightbug.CharacterControllerPro.Core
             }
         }
 
+                // Update platform position and handle character collisions
         void UpdatePlatform()
         {
             Vector3 castDisplacement = rigidbodyComponent.Position - preSimulationPosition;

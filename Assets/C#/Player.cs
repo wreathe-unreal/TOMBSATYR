@@ -151,7 +151,8 @@ public class Player : MonoBehaviour
         {
             return obj.bIsActivated && IsNearPlayer(obj.gameObject, CheckpointSearchRadius) 
                                     && Camera.main.IsInView(obj.gameObject, CheckpointTravelAngle) 
-                                    && Camera.main.IsUnobstructed(obj.gameObject);
+                                    && Camera.main.IsUnobstructed(obj.gameObject)
+                                    && Vector3.Distance(playerPosition, gameObject.transform.position) > 12f; //and the player is far enough away so they dont accidentally fast travel all the time
 
         });
 
