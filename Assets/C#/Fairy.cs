@@ -22,6 +22,7 @@ public class Fairy : MonoBehaviour
 
     void Start()
     {
+
         PlayerRef = FindObjectOfType<Player>();
         BoidsController = GetComponentInChildren<BoidsActor>();
         FairyState = EFairyState.Idle;
@@ -32,6 +33,12 @@ public class Fairy : MonoBehaviour
     {
         CheckDistanceToPlayer();
         TryLightTorch();
+        
+        
+        if (Input.GetButtonDown("Fire1"))
+        {
+            TeleportToPlayer();
+        }
         
     }
 
@@ -92,11 +99,15 @@ public class Fairy : MonoBehaviour
 
     public void TeleportToPlayer()
     {
-        Vector3 newPosition = PlayerRef.Controller.transform.position;
-        newPosition.y += 1.5f;
+        BoidsController.SetOrigin(OrbitLocation);
+        Transform PlayerControllerTransform = PlayerRef.Controller.transform;
+        Vector3 newPosition = PlayerControllerTransform.position;
+        newPosition.y += 10f;
         newPosition.x += 2f;
+        
+        //assign to fairy
         transform.position = newPosition;
-        transform.rotation = PlayerRef.Controller.transform.rotation;
+        transform.rotation = PlayerControllerTransform.rotation;
         FairyState = EFairyState.Idle;
     }
 

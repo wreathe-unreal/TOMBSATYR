@@ -7,6 +7,8 @@ public class DamageVolume : MonoBehaviour
 {
     private Player PlayerRef;
     public int Damage;
+    private bool bHasTriggered = false;
+
     
     // Start is called before the first frame update
     void Start()
@@ -34,9 +36,17 @@ public class DamageVolume : MonoBehaviour
     
     private void OnTriggerEnter(Collider other)
     {
-        if (other.GetComponent<CharacterActor>() != null)
+        if (other.GetComponent<CharacterBody>() != null && !bHasTriggered )
         {
+            bHasTriggered = true;
             PlayerRef.UpdateHealthWithReset(-Damage);
+            StartCoroutine(ResetTriggerFlag());
         }
+    }
+
+    private IEnumerator ResetTriggerFlag()
+    {
+        yield return new WaitForSeconds(0.1f); // Adjust this delay as needed
+        bHasTriggered = false;
     }
 }

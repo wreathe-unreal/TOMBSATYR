@@ -10,7 +10,7 @@ public class UI : MonoBehaviour
     public Sprite FullHeart;    // Full heart sprite
     public Sprite HalfHeart;    // Half heart sprite
     public Sprite EmptyHeart;   // Empty heart sprite
-
+    private int CurrentlyDisplayedHealth;
 
     private Player PlayerRef;
     // Start is called before the first frame update
@@ -24,19 +24,25 @@ public class UI : MonoBehaviour
         Cursor.visible = false;
         
         PlayerRef = FindObjectOfType<Player>();
+        CurrentlyDisplayedHealth = PlayerRef.GetHealth();
     }
 
     // Update is called once per frame
     void Update()
     {
-        UpdateHealth();
+        if (PlayerRef.GetHealth() != CurrentlyDisplayedHealth)
+        {
+            UpdateHealth();
+            CurrentlyDisplayedHealth = PlayerRef.GetHealth();
+        }
     }
 
     void UpdateHealth()
     {
         int heartCount = Hearts.Length; // Total number of hearts
-        int fullHearts = PlayerRef.GetHealth() / 2;  // Number of full hearts
-        bool hasHalfHeart = PlayerRef.GetHealth() % 2 != 0; // Check if there is a half heart
+        int health = PlayerRef.GetHealth(); // Get the player's health
+        int fullHearts = health / 2; // Number of full hearts
+        int halfHearts = health % 2; // Number of half hearts
 
         for (int i = 0; i < heartCount; i++)
         {
@@ -44,7 +50,7 @@ public class UI : MonoBehaviour
             {
                 Hearts[i].sprite = FullHeart;
             }
-            else if (i == fullHearts && hasHalfHeart)
+            else if (i == fullHearts && halfHearts == 1)
             {
                 Hearts[i].sprite = HalfHeart;
             }

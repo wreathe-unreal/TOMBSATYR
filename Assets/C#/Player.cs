@@ -6,6 +6,13 @@ using Lightbug.Utilities;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+public enum ERespawnType
+{
+    Warp,
+    Reset,
+    GameOver
+}
+
 public class Player : MonoBehaviour
 {
     public CharacterActor Controller;
@@ -19,6 +26,7 @@ public class Player : MonoBehaviour
     [SerializeField, ReadOnly] private Resetpoint CurrentResetpoint;
     private const int HEALTH_MAX = 20;
     private const int HEALTH_MIN = 0;
+    private FadeToBlack ScreenFader;
     
     // Start is called before the first frame update
     void Start()
@@ -26,6 +34,7 @@ public class Player : MonoBehaviour
         Health = HEALTH_MAX;
         Controller.OnGroundedStateEnter += CalculateFallDamage;
         Controller.OnGroundedStateExit += FindNearestResetpoint;
+        ScreenFader = FindObjectOfType<FadeToBlack>();
     }
     
     
@@ -40,7 +49,10 @@ public class Player : MonoBehaviour
 
     private void CalculateFallDamage(Vector3 velocity)
     {
-        print(velocity.y);
+        if (velocity.y < -30)
+        {
+            print(velocity.y);
+        }
         float fallVelocity = velocity.y;
         
         int fallDamage = (Mathf.Abs(fallVelocity)) switch
@@ -58,15 +70,17 @@ public class Player : MonoBehaviour
 
     public void UpdateHealth(int modifier)
     {
+        if (modifier == 0)
+        {
+            return;
+        }
+        
         Health += modifier;
         Health = Mathf.Clamp(Health, HEALTH_MIN, HEALTH_MAX);
 
         if(Health == 0)
         {
-            print("update health");
             OnDeath();
-            
-            return;
         }
         
     }
@@ -75,41 +89,29 @@ public class Player : MonoBehaviour
     {
         Health += modifier;
         Health = Mathf.Clamp(Health, HEALTH_MIN, HEALTH_MAX);
-
-        if(Health == 0)
-        {
-            print("update health");
-            OnDeath();
-            
-            return;
-        }
         
         if (GetHealth() > 0)
         {
             OnReset();
+            return;
+        }
+        
+        if(Health <= 0)
+        {
+            OnDeath();
         }
     }
 
     public void OnReset()
     {
-        if (CurrentCheckpoint != null)
-        {
-            FastTravel(CurrentResetpoint);
-        }
-        else
-        {
-            FindNearestResetpoint();
-        }
+        ScreenFader.StartSequence(ERespawnType.Reset, GetCurrentResetpoint());
     }
 
     private void OnDeath()
     {
-        print("on death");
-        FindObjectOfType<GameOver>().GetComponent<GameOver>().TriggerGameOver();
+        ScreenFader.StartSequence(ERespawnType.GameOver, (Resetpoint)GetCurrentCheckpoint());
     }
     
-    
-
     public int GetHealth()
     {
         return Health;
@@ -151,16 +153,12 @@ public class Player : MonoBehaviour
         CurrentResetpoint = (Resetpoint)checkpoint;
         
         Controller.Teleport(CurrentCheckpoint.GetSpawn().position, CurrentCheckpoint.GetSpawn().rotation);
-
-        FairyRef.TeleportToPlayer();
-        
         Health = HEALTH_MAX;
     }
     
     public void FastTravel(Resetpoint resetpoint)
     {
         Controller.Teleport(resetpoint.GetSpawn().position, resetpoint.GetSpawn().rotation);
-        FairyRef.TeleportToPlayer();
     }
 
     
@@ -180,8 +178,7 @@ public class Player : MonoBehaviour
 
         if (foundCheckpoints.Count > 0)
         {
-            FastTravel(foundCheckpoints[0]);
-
+            ScreenFader.StartSequence(ERespawnType.Warp, (Resetpoint)foundCheckpoints[0]);
         }
 
     }
