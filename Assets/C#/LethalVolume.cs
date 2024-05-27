@@ -1,12 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+
+using System.Collections;
+using System.Collections.Generic;
 using Lightbug.CharacterControllerPro.Core;
 using UnityEngine;
 
-public class DamageVolume : MonoBehaviour
+public class LethalVolume : MonoBehaviour
 {
     private Player PlayerRef;
-    public int Damage;
+    private int Damage = 20;
     
     // Start is called before the first frame update
     void Start()
@@ -22,7 +26,7 @@ public class DamageVolume : MonoBehaviour
 
     void OnDrawGizmos()
     {
-        Gizmos.color = Color.yellow;
+        Gizmos.color = Color.red;
         
         BoxCollider boxCollider = GetComponent<BoxCollider>();
 
@@ -36,7 +40,7 @@ public class DamageVolume : MonoBehaviour
     {
         if (other.GetComponent<CharacterActor>() != null)
         {
-            PlayerRef.UpdateHealthWithReset(-Damage);
+            PlayerRef.UpdateHealth(-Damage);
         }
     }
 }

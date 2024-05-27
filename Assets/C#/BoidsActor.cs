@@ -1,11 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
+using Lightbug.CharacterControllerPro.Core;
 
-/// <summary>
-/// 该类是对群体中的每个个体行为的约束，即单个的鸟
-/// </summary>
+
 [RequireComponent(typeof(Rigidbody))]
-public class UnityFlock : MonoBehaviour
+public class BoidsActor : MonoBehaviour
 {
     public bool ShowGizmos = false;
     [Range(0, 5f)]
@@ -32,7 +31,7 @@ public class UnityFlock : MonoBehaviour
     private Vector3 randomPush;
     private Vector3 originPush;
     private Transform[] objects;
-    private UnityFlock[] otherFlocks;
+    private BoidsActor[] otherFlocks;
     private Transform transformComponent;
     private Rigidbody rb;
 
@@ -42,21 +41,21 @@ public class UnityFlock : MonoBehaviour
         rb.useGravity = false; // Disable gravity if you don't want the objects to fall
         rb.constraints = RigidbodyConstraints.FreezeRotationX; // Prevent rotation
 
-        SetOrigin(FindObjectOfType<UnityFlockController>().transform);
+        SetOrigin(FindObjectOfType<CharacterActor>().transform);
 
         randomFreq = 1.0f / randomFreq;
 
         transformComponent = transform;
 
-        Component[] tempFlocks = FindObjectsOfType<UnityFlock>();
+        Component[] tempFlocks = FindObjectsOfType<BoidsActor>();
 
         objects = new Transform[tempFlocks.Length];
-        otherFlocks = new UnityFlock[tempFlocks.Length];
+        otherFlocks = new BoidsActor[tempFlocks.Length];
 
         for (int i = 0; i < tempFlocks.Length; i++)
         {
             objects[i] = tempFlocks[i].transform;
-            otherFlocks[i] = (UnityFlock)tempFlocks[i];
+            otherFlocks[i] = (BoidsActor)tempFlocks[i];
         }
 
         StartCoroutine(UpdateRandom());
@@ -118,7 +117,7 @@ public class UnityFlock : MonoBehaviour
                 }
 
                 f = d / followRadius;
-                UnityFlock otherSeagull = otherFlocks[i];
+                BoidsActor otherSeagull = otherFlocks[i];
                 avgVelocity += otherSeagull.normalizedVelocity * f * followVelocity;
             }
         }

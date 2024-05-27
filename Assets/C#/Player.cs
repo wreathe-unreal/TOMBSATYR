@@ -68,6 +68,26 @@ public class Player : MonoBehaviour
             
             return;
         }
+        
+    }
+
+    public void UpdateHealthWithReset(int modifier)
+    {
+        Health += modifier;
+        Health = Mathf.Clamp(Health, HEALTH_MIN, HEALTH_MAX);
+
+        if(Health == 0)
+        {
+            print("update health");
+            OnDeath();
+            
+            return;
+        }
+        
+        if (GetHealth() > 0)
+        {
+            OnReset();
+        }
     }
 
     public void OnReset()

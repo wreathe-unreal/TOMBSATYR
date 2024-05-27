@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Lightbug.CharacterControllerPro.Core;
 using UnityEngine;
 
 enum EFairyState
@@ -15,16 +16,16 @@ public class Fairy : MonoBehaviour
     public float IdleRange = 5f;
     public float TorchActivationRange = 5f;
     public Transform OrbitLocation;
-    private UnityFlock BoidsController;
+    private BoidsActor BoidsController;
     private Player PlayerRef;
     private bool bUnstuckCoroActive;
 
     void Start()
     {
         PlayerRef = FindObjectOfType<Player>();
-        BoidsController = GetComponentInChildren<UnityFlock>();
+        BoidsController = GetComponentInChildren<BoidsActor>();
         FairyState = EFairyState.Idle;
-        OrbitLocation = FindObjectOfType<UnityFlockController>().transform;
+        OrbitLocation = FindObjectOfType<CharacterActor>().gameObject.FindChildWithTag("Fairy Orbit").transform;
     }
 
     void Update()
