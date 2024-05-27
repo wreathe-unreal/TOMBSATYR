@@ -1,5 +1,5 @@
-using System;
 using System.Collections;
+using Lightbug.Utilities;
 using UnityEngine;
 
 public enum EPlatformState
@@ -19,11 +19,12 @@ public class Platform : MonoBehaviour
     public float ArrivalWaitTime = 0.0f; // Amount of time to wait before moving again, if 0 wait forever
     public bool bTriggerActivated = false; // If the platform is triggered to move
     
-    private Vector3 Target;
-    private EPlatformState PlatformState;
+    [SerializeField, ReadOnly] private Vector3 Target;
+    [SerializeField, ReadOnly] private EPlatformState PlatformState;
 
     private bool bWaitingPlatformMoved = false;
-    
+    private Coroutine waitCoroutine = null;
+
     void Start()
     {
         PlatformState = EPlatformState.Idle;
@@ -37,19 +38,11 @@ public class Platform : MonoBehaviour
 
     void SwitchDirection()
     {
-        if (Target == Origin)
-        {
-            Target = Destination;
-        }
-        else
-        {
-            Target = Origin;
-        }
+        Target = (Target == Origin) ? Destination : Origin;
     }
     
     void Update()
     {
-        
         if (PlatformState == EPlatformState.Moving)
         {
             MovePlatform();
@@ -58,14 +51,15 @@ public class Platform : MonoBehaviour
 
     public void StartMoving()
     {
-        if (PlatformState == EPlatformState.Idle)
+        if (PlatformState == EPlatformState.Idle || PlatformState == EPlatformState.Waiting)
         {
             PlatformState = EPlatformState.Moving;
-        }
-
-        if (PlatformState == EPlatformState.Waiting)
-        {
-            bWaitingPlatformMoved = true;
+            bWaitingPlatformMoved = false;
+            if (waitCoroutine != null)
+            {
+                StopCoroutine(waitCoroutine);
+                waitCoroutine = null;
+            }
         }
     }
 
@@ -76,14 +70,10 @@ public class Platform : MonoBehaviour
             return;
         }
         
-        float distance = Vector3.Distance(Origin, Destination);
-        float currentDistance = Vector3.Distance(transform.position, Target);
-        float t = 1.0f - (currentDistance / distance); // Normalize time based on distance
-        float easeStep = EaseInOutQuad(t) * Speed * Time.deltaTime; // Apply easing
+        float step = Speed * Time.deltaTime;
+        transform.position = Vector3.MoveTowards(transform.position, Target, step);
 
-        transform.position = Vector3.MoveTowards(transform.position, Target, easeStep);
-
-        if (Vector3.Distance(transform.position, Target) < 0.1f)
+        if (Vector3.Distance(transform.position, Target) < 0.01f) // Use a smaller precision value
         {
             SwitchDirection();
 
@@ -92,14 +82,14 @@ public class Platform : MonoBehaviour
                 if (ArrivalWaitTime > 0f)
                 {
                     PlatformState = EPlatformState.Waiting;
-                    StartCoroutine(WaitAtDestination());   
+                    waitCoroutine = StartCoroutine(WaitAtDestination());   
                 }
                 else
                 {
                     PlatformState = EPlatformState.Idle;
                 }
             }
-            if(!bConstantMotion)
+            else if (!bConstantMotion)
             {
                 PlatformState = EPlatformState.Idle;
             }
@@ -108,13 +98,7 @@ public class Platform : MonoBehaviour
 
     private IEnumerator WaitAtDestination()
     {
-        float waitTime = ArrivalWaitTime;
-
-        while (waitTime > 0)
-        {
-            yield return new WaitForSeconds(1.0f);
-            waitTime -= 1.0f;
-        }
+        yield return new WaitForSeconds(ArrivalWaitTime);
 
         if (bConstantMotion || bWaitingPlatformMoved)
         {
@@ -125,10 +109,9 @@ public class Platform : MonoBehaviour
         {
             PlatformState = EPlatformState.Idle;
         }
-        
     }
 
-    // Easing function for smooth movement (example using quadratic easing)
+    // Easing function for smooth movement
     private float EaseInOutQuad(float t)
     {
         t = Mathf.Clamp01(t);

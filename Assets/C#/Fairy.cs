@@ -54,16 +54,13 @@ public class Fairy : MonoBehaviour
     {
         if (FairyState == EFairyState.Moving)
         {
-            if (BoidsController.GetOrigin() != OrbitLocation)
+            if (BoidsController.GetOrigin() != OrbitLocation && BoidsController.GetOrigin().GetComponent<Torch>() != null)
             {
-                if (BoidsController.GetOrigin().GetComponent<Torch>() != null)
+                if (Vector3.Distance(transform.position, BoidsController.GetOrigin().transform.position) <= TorchActivationRange)
                 {
-                    if (Vector3.Distance(transform.position, BoidsController.GetOrigin().transform.position) <= TorchActivationRange)
-                    {
-                        BoidsController.GetOrigin().GetComponent<Torch>().Light();
-                        BoidsController.SetOrigin(OrbitLocation);
-                        FairyState = EFairyState.Idle;
-                    }
+                    BoidsController.GetOrigin().GetComponent<Torch>().Light();
+                    BoidsController.SetOrigin(OrbitLocation);
+                    FairyState = EFairyState.Idle;
                 }
             }
         }

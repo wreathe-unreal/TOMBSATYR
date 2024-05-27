@@ -32,8 +32,10 @@ public class Checkpoint : Resetpoint
         }
     }
     
-    void OnTriggerEnter(Collider other)
+    protected override void OnTriggerEnter(Collider other)
     {
+        base.OnTriggerEnter(other);
+        
         CharacterBody playerPhysics = other.GetComponent<CharacterBody>();
         if (playerPhysics != null)
         {
@@ -50,8 +52,11 @@ public class Checkpoint : Resetpoint
         }
     }
 
-    void OnTriggerExit(Collider other)
+    protected override void OnTriggerExit(Collider other)
     {
+
+        base.OnTriggerEnter(other);
+        
         // Check if the colliding object has a Player component
         CharacterBody playerPhysics = other.GetComponent<CharacterBody>();
         if (playerPhysics != null)

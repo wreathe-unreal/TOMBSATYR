@@ -21,13 +21,13 @@ public static class CameraExtensions
         Ray ray = new Ray(camera.transform.position, toObj);
         RaycastHit hit;
                     
-        LayerMask layerMask = 1 << LayerMask.NameToLayer("Player");  // Create a mask for the "Player" layer
-        layerMask |= 1 << LayerMask.NameToLayer("Fairy");  // Add the "Fairy" layer to the mask
+        LayerMask layerMask = 1 << LayerMask.NameToLayer("Player"); 
+        layerMask |= 1 << LayerMask.NameToLayer("Fairy");  
         layerMask = ~layerMask;  // Invert the mask to hit everything except "Player" and "Fairy"
                     
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
         {
-            if (hit.collider.gameObject == obj || (hit.collider.transform.parent.gameObject != null && hit.collider.transform.parent.gameObject == obj))
+            if ((hit.collider.gameObject != null && hit.collider.gameObject == obj) || (hit.collider.transform.parent.gameObject != null && hit.collider.transform.parent.gameObject == obj))
             {
                 return true;
             }

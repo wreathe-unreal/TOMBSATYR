@@ -6,6 +6,7 @@ public class Torch : MonoBehaviour
 {
     public bool bStartLit;
     public bool bLit = false;
+    
     // Start is called before the first frame update
     void Start()
     {

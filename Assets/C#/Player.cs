@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Lightbug.CharacterControllerPro.Core;
+using Lightbug.Utilities;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -14,8 +15,8 @@ public class Player : MonoBehaviour
     public float SendFairyAngle = 25.0f;
     public float CheckpointTravelAngle = 10f;
     public Fairy FairyRef;
-    public Checkpoint CurrentCheckpoint;
-    public Resetpoint CurrentResetpoint;
+    [SerializeField, ReadOnly] private Checkpoint CurrentCheckpoint;
+    [SerializeField, ReadOnly] private Resetpoint CurrentResetpoint;
     private const int HEALTH_MAX = 20;
     private const int HEALTH_MIN = 0;
     
@@ -55,19 +56,21 @@ public class Player : MonoBehaviour
 
     }
 
-    void UpdateHealth(int modifier)
+    public void UpdateHealth(int modifier)
     {
         Health += modifier;
         Health = Mathf.Clamp(Health, HEALTH_MIN, HEALTH_MAX);
 
         if(Health == 0)
         {
+            print("update health");
             OnDeath();
+            
             return;
         }
     }
 
-    private void OnReset()
+    public void OnReset()
     {
         if (CurrentCheckpoint != null)
         {
@@ -81,16 +84,11 @@ public class Player : MonoBehaviour
 
     private void OnDeath()
     {
-        if (CurrentCheckpoint != null)
-        {
-            FastTravel(CurrentCheckpoint);
-        }
-        else
-        {
-            FindCheckpointAndGo();
-        }
+        print("on death");
+        FindObjectOfType<GameOver>().GetComponent<GameOver>().TriggerGameOver();
     }
-
+    
+    
 
     public int GetHealth()
     {
@@ -98,22 +96,30 @@ public class Player : MonoBehaviour
     }
     
 
-    private Resetpoint GetCurrentResetpoint()
+    public Resetpoint GetCurrentResetpoint()
     {
         return CurrentResetpoint;
     }
 
-    private void SetCurrentResetpoint(Resetpoint newResetpoint)
+    public void SetCurrentResetpoint(GameObject newResetObject)
     {
-        CurrentResetpoint = newResetpoint;
+        if (newResetObject.GetComponent<Resetpoint>() != null)
+        {
+            CurrentResetpoint = newResetObject.GetComponent<Resetpoint>();
+        }
+        
+        if (newResetObject.GetComponent<Checkpoint>() != null)
+        {
+            CurrentResetpoint = (Checkpoint)newResetObject.GetComponent<Resetpoint>();
+        }
     }
     
-    private Checkpoint GetCurrentCheckpoint()
+    public Checkpoint GetCurrentCheckpoint()
     {
         return CurrentCheckpoint;
     }
 
-    private void SetCurrentCheckpoint(Checkpoint newCheckpoint)
+    public void SetCurrentCheckpoint(Checkpoint newCheckpoint)
     {
         CurrentCheckpoint = newCheckpoint;
         CurrentResetpoint = CurrentCheckpoint;
@@ -133,11 +139,7 @@ public class Player : MonoBehaviour
     
     public void FastTravel(Resetpoint resetpoint)
     {
-        CurrentCheckpoint = (Checkpoint)resetpoint;
-        CurrentResetpoint = resetpoint;
-        
-        Controller.Teleport(CurrentCheckpoint.GetSpawn().position, CurrentCheckpoint.GetSpawn().rotation);
-
+        Controller.Teleport(resetpoint.GetSpawn().position, resetpoint.GetSpawn().rotation);
         FairyRef.TeleportToPlayer();
     }
 
