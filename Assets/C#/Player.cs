@@ -26,7 +26,7 @@ public class Player : MonoBehaviour
     [SerializeField, ReadOnly] private Resetpoint CurrentResetpoint;
     private const int HEALTH_MAX = 20;
     private const int HEALTH_MIN = 0;
-    private FadeToBlack ScreenFader;
+    private RespawnManager ScreenFader;
     
     // Start is called before the first frame update
     void Start()
@@ -34,7 +34,7 @@ public class Player : MonoBehaviour
         Health = HEALTH_MAX;
         Controller.OnGroundedStateEnter += CalculateFallDamage;
         Controller.OnGroundedStateExit += FindNearestResetpoint;
-        ScreenFader = FindObjectOfType<FadeToBlack>();
+        ScreenFader = FindObjectOfType<RespawnManager>();
     }
     
     

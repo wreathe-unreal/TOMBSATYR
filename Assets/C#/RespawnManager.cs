@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 
 
-public class FadeToBlack : MonoBehaviour
+public class RespawnManager : MonoBehaviour
 {
     public Image FadeImage; // Reference to the UI Image for the fade effect
     public float GameOverFadeDuration = 0.25f; // Duration of the fade effect
