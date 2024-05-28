@@ -33,13 +33,6 @@ public class Fairy : MonoBehaviour
     {
         CheckDistanceToPlayer();
         TryLightTorch();
-        
-        
-        if (Input.GetButtonDown("Fire1"))
-        {
-            TeleportToPlayer();
-        }
-        
     }
 
     public void GoFairy(Transform destination)

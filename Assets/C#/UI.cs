@@ -11,19 +11,21 @@ public class UI : MonoBehaviour
     public Sprite HalfHeart;    // Half heart sprite
     public Sprite EmptyHeart;   // Empty heart sprite
     private int CurrentlyDisplayedHealth;
-
+    public Image FadeToBlackImage;
     private Player PlayerRef;
-    // Start is called before the first frame update
+
+    private Coroutine FadeCoro = null;
+    
     void Start()
     {
-        
         // Lock the cursor to the center of the screen
         Cursor.lockState = CursorLockMode.Locked;
         
         // Make the cursor invisible
         Cursor.visible = false;
+
+        PlayerRef = FindObjectOfType<Player>().GetComponent<Player>();
         
-        PlayerRef = FindObjectOfType<Player>();
         CurrentlyDisplayedHealth = PlayerRef.GetHealth();
     }
 
@@ -59,5 +61,39 @@ public class UI : MonoBehaviour
                 Hearts[i].sprite = EmptyHeart;
             }
         }
+    }
+
+    public void FadeBlack(float fadeDuration)
+    {
+        if (FadeCoro == null)
+        {
+            FadeCoro = StartCoroutine(FadeScreenCoro(fadeDuration, true));
+        }
+    }
+
+    public void FadeClear(float fadeDuration)
+    {
+        if (FadeCoro == null)
+        {
+            FadeCoro = StartCoroutine(FadeScreenCoro(fadeDuration, false));
+        }
+    }
+
+    private IEnumerator FadeScreenCoro(float fadeDuration, bool fadeIn)
+    {
+        float elapsedTime = 0f;
+        float startAlpha = fadeIn ? 0 : 1;
+        float endAlpha = fadeIn ? 1 : 0;
+
+        while (elapsedTime < fadeDuration)
+        {
+            elapsedTime += Time.unscaledDeltaTime;
+            float alpha = Mathf.Lerp(startAlpha, endAlpha, elapsedTime / fadeDuration);
+            FadeToBlackImage.color = new Color(0, 0, 0, alpha);
+            yield return null;
+        }
+
+        FadeToBlackImage.color = new Color(0, 0, 0, endAlpha);
+        FadeCoro = null;
     }
 }

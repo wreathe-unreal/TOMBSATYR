@@ -104,12 +104,12 @@ public class Player : MonoBehaviour
 
     public void OnReset()
     {
-        ScreenFader.StartSequence(ERespawnType.Reset, GetCurrentResetpoint());
+        ScreenFader.Respawn(ERespawnType.Reset, GetCurrentResetpoint());
     }
 
     private void OnDeath()
     {
-        ScreenFader.StartSequence(ERespawnType.GameOver, (Resetpoint)GetCurrentCheckpoint());
+        ScreenFader.Respawn(ERespawnType.GameOver, (Resetpoint)GetCurrentCheckpoint());
     }
     
     public int GetHealth()
@@ -178,7 +178,7 @@ public class Player : MonoBehaviour
 
         if (foundCheckpoints.Count > 0)
         {
-            ScreenFader.StartSequence(ERespawnType.Warp, (Resetpoint)foundCheckpoints[0]);
+            ScreenFader.Respawn(ERespawnType.Warp, (Resetpoint)foundCheckpoints[0]);
         }
 
     }

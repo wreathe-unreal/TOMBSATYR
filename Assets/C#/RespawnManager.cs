@@ -13,28 +13,37 @@ public class RespawnManager : MonoBehaviour
     public float ResetFadeDuration = .1f;
     public float ResetTime = .1f;
     private Player PlayerRef;
-    private Coroutine SequenceCoro;
+    private Coroutine RespawnCoro;
     private Fairy FairyRef;
     private float _FadeDuration;
     private float _WaitTime;
     private ERespawnType RespawnType;
     private Resetpoint WakeupLocation;
+    private UI GUI;
 
     void Start()
     {
-        PlayerRef = FindObjectOfType<Player>();
+        GUI = FindObjectOfType<UI>().GetComponent<UI>();
+        PlayerRef = FindObjectOfType<Player>().GetComponent<Player>();
         FadeImage = GetComponent<Image>();
-        FairyRef = FindObjectOfType<Fairy>();
+        FairyRef = FindObjectOfType<Fairy>().GetComponent<Fairy>();
 
         // Ensure the image is transparent at the start
         FadeImage.color = new Color(0, 0, 0, 0);
     }
 
-    public void StartSequence(ERespawnType respawnType, Resetpoint wakeupLocation)
+    public void Respawn(ERespawnType respawnType, Resetpoint wakeupLocation)
     {
         RespawnType = respawnType;
         WakeupLocation = wakeupLocation;
-        
+
+        SetTimes();
+
+        RespawnCoro = StartCoroutine(RespawnSequence());
+    }
+
+    private void SetTimes()
+    {
         switch (RespawnType)
         {
             case ERespawnType.GameOver:
@@ -46,50 +55,33 @@ public class RespawnManager : MonoBehaviour
                 _WaitTime = ResetTime;
                 break;
         }
-
-        SequenceCoro = StartCoroutine(FadeToBlackSequence());
     }
 
-    private IEnumerator FadeToBlackSequence()
+    private IEnumerator RespawnSequence()
     {
-        float elapsedTime = 0f;
+        GUI.FadeBlack(_FadeDuration);
         
-        while (elapsedTime < _FadeDuration)
-        {
-            elapsedTime += Time.unscaledDeltaTime;
-            float alpha = Mathf.Clamp01(elapsedTime / _FadeDuration);
-            FadeImage.color = new Color(0, 0, 0, alpha);
-            yield return null;
-        }
-
-        // Ensure the screen is fully black at the end
-        FadeImage.color = new Color(0, 0, 0, 1);
-        Time.timeScale = .0001f;
+        yield return new WaitForSecondsRealtime(_FadeDuration);
+        
+        Time.timeScale = .001f;
         
         yield return new WaitForSecondsRealtime(_WaitTime);
 
-        HandleFastTravel();
-        
-        elapsedTime = 0.0f;
-        
-        while (elapsedTime < _FadeDuration)
-        {
-            elapsedTime += Time.unscaledDeltaTime;
-            float alpha = 1.0f - Mathf.Clamp01(elapsedTime / _FadeDuration);
-            FadeImage.color = new Color(0, 0, 0, alpha);
-            yield return null;
-        }
+        PlayerWakeUp();
 
-        // Ensure the screen is fully clear at the end
-        FadeImage.color = new Color(0, 0, 0, 0);
+        GUI.FadeClear(_FadeDuration);
+        
+        yield return new WaitForSecondsRealtime(_FadeDuration);
         
         Time.timeScale = 1.0f;
-        SequenceCoro = null;
+        
         FairyRef.TeleportToPlayer();
+
+        RespawnCoro = null;
     }
 
     
-    private void HandleFastTravel()
+    private void PlayerWakeUp()
     {
         switch (RespawnType)
         {
