@@ -1,6 +1,8 @@
 using System.Collections;
+using Lightbug.CharacterControllerPro.Core;
 using Lightbug.Utilities;
 using UnityEngine;
+using UnityEngine.Events;
 
 public enum EPlatformState
 {
@@ -17,19 +19,18 @@ public class Platform : MonoBehaviour
     public bool bConstantMotion = false; // If true, platform moves from the start
     public bool bWaitOnArrive = true; // If the platform should wait when it arrives
     public float ArrivalWaitTime = 0.0f; // Amount of time to wait before moving again, if 0 wait forever
-    public bool bTriggerActivated = false; // If the platform is triggered to move
-    
+
     [SerializeField, ReadOnly] private Vector3 Target;
     [SerializeField, ReadOnly] private EPlatformState PlatformState;
-
     private bool bWaitingPlatformMoved = false;
     private Coroutine waitCoroutine = null;
 
+    
     void Start()
     {
         PlatformState = EPlatformState.Idle;
         Target = Destination;
-        
+
         if (bConstantMotion)
         {
             StartMoving();
@@ -40,9 +41,15 @@ public class Platform : MonoBehaviour
     {
         Target = (Target == Origin) ? Destination : Origin;
     }
-    
+
     void Update()
     {
+
+        if (bConstantMotion)
+        {
+            StartMoving();
+        }
+        
         if (PlatformState == EPlatformState.Moving)
         {
             MovePlatform();
@@ -98,6 +105,11 @@ public class Platform : MonoBehaviour
 
     private IEnumerator WaitAtDestination()
     {
+        if (ArrivalWaitTime == 0f)
+        {
+            yield break;
+        }
+        
         yield return new WaitForSeconds(ArrivalWaitTime);
 
         if (bConstantMotion || bWaitingPlatformMoved)
@@ -116,5 +128,16 @@ public class Platform : MonoBehaviour
     {
         t = Mathf.Clamp01(t);
         return t < 0.5f ? 2 * t * t : -1 + (4 - 2 * t) * t;
+    }
+
+    public void Trigger()
+    {
+        if (PlatformState == EPlatformState.Moving)
+        {
+            PlatformState = EPlatformState.Idle;
+            return;
+        }
+        
+        StartMoving();
     }
 }

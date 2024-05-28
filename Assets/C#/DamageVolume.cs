@@ -8,12 +8,14 @@ public class DamageVolume : MonoBehaviour
     private Player PlayerRef;
     public int Damage;
     private bool bHasTriggered = false;
+    private BoxCollider CollisionBox;
 
     
     // Start is called before the first frame update
     void Start()
     {
         PlayerRef = FindObjectOfType<Player>();
+        CollisionBox = GetComponent<BoxCollider>();
     }
 
     // Update is called once per frame
@@ -26,11 +28,11 @@ public class DamageVolume : MonoBehaviour
     {
         Gizmos.color = Color.yellow;
         
-        BoxCollider boxCollider = GetComponent<BoxCollider>();
+        CollisionBox = GetComponentInChildren<BoxCollider>();
 
-        if (boxCollider != null)
+        if (CollisionBox != null)
         {
-            Gizmos.DrawWireCube(transform.position, boxCollider.size);
+            Gizmos.DrawWireCube(transform.position, CollisionBox.gameObject.transform.localScale);
         }
     }
     
