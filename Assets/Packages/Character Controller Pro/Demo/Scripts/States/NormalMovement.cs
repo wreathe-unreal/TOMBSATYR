@@ -68,11 +68,10 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         #endregion
 
-
         protected MaterialController materialController = null;
         protected int notGroundedJumpsLeft = 0;
         protected bool isAllowedToCancelJump = false;
-
+        
         protected bool wantToRun = false;
 
         protected float currentPlanarSpeedLimit = 0f;
@@ -109,12 +108,13 @@ namespace Lightbug.CharacterControllerPro.Demo
         {
             base.Start();
 
+            CharacterActor.OnWallHit += CheckUngroundedJumps;
+
             targetHeight = CharacterActor.DefaultBodySize.y;
 
             float minCrouchHeightRatio = CharacterActor.BodySize.x / CharacterActor.BodySize.y;
             crouchParameters.heightRatio = Mathf.Max(minCrouchHeightRatio, crouchParameters.heightRatio);
-            
-            wantToRun = false;
+
         }
 
         protected virtual void OnEnable()
@@ -132,6 +132,13 @@ namespace Lightbug.CharacterControllerPro.Demo
             return "This state serves as a multi purpose movement based state. It is responsible for handling gravity and jump, walk and run, crouch, " +
             "react to the different material properties, etc. Basically it covers all the common movements involved " +
             "in a typical game, from a 3D platformer to a first person walking simulator.";
+        }
+        
+        
+
+        public bool IsRunning()
+        {
+            return wantToRun;
         }
 
         void OnTeleport(Vector3 position, Quaternion rotation)
@@ -193,7 +200,7 @@ namespace Lightbug.CharacterControllerPro.Demo
             this.reductionDuration = reductionDuration;
         }
 
-        void SetMotionValues(Vector3 targetPlanarVelocity)
+        public void SetMotionValues(Vector3 targetPlanarVelocity)
         {
             float angleCurrentTargetVelocity = Vector3.Angle(CharacterActor.PlanarVelocity, targetPlanarVelocity);
 
@@ -512,7 +519,6 @@ namespace Lightbug.CharacterControllerPro.Demo
                 groundedJumpAvailable = true;
             }
 
-
             if (isAllowedToCancelJump)
             {
                 if (verticalMovementParameters.cancelJumpOnRelease)
@@ -566,7 +572,7 @@ namespace Lightbug.CharacterControllerPro.Demo
 
                 if (OnJumpPerformed != null)
                     OnJumpPerformed();
-
+                
                 // Define the jump direction ---------------------------------------------------
                 jumpDirection = SetJumpDirection();
 
@@ -799,6 +805,11 @@ namespace Lightbug.CharacterControllerPro.Demo
         {
             ProcessVerticalMovement(dt);
             ProcessPlanarMovement(dt);
+        }
+
+        public void CheckUngroundedJumps(Contact other)
+        {
+            notGroundedJumpsLeft = verticalMovementParameters.availableNotGroundedJumps;
         }
     }
 }

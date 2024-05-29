@@ -18,7 +18,7 @@ namespace TOMBSATYR
         public float IdleRange = 5f;
         public float TorchActivationRange = 5f;
         public Transform OrbitLocation;
-        private BoidsActor BoidsController;
+        private FairyFlight BoidsController;
         private Player PlayerRef;
         private bool bUnstuckCoroActive;
 
@@ -26,7 +26,7 @@ namespace TOMBSATYR
         {
 
             PlayerRef = FindObjectOfType<Player>();
-            BoidsController = GetComponentInChildren<BoidsActor>();
+            BoidsController = GetComponentInChildren<FairyFlight>();
             FairyState = EFairyState.Idle;
             OrbitLocation = FindObjectOfType<CharacterActor>().gameObject.FindChildWithTag("Fairy Orbit").transform;
         }

@@ -45,6 +45,7 @@ namespace TOMBSATYR
                     }
                 }
 
+                Debug.Log(hit.collider.gameObject.name);
                 if ((hit.collider.gameObject != null && hit.collider.gameObject == obj) ||
                     (hit.collider.transform.parent.gameObject != null &&
                      hit.collider.transform.parent.gameObject == obj))

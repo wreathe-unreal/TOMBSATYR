@@ -33,8 +33,9 @@ namespace TOMBSATYR
             PlayerRef = FindObjectOfType<Player>().GetComponent<Player>();
 
             CurrentlyDisplayedHealth = PlayerRef.GetHealth();
+            
         }
-
+        
         // Update is called once per frame
         void Update()
         {

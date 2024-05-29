@@ -9,44 +9,40 @@ using UnityEngine.UIElements;
 
 namespace TOMBSATYR
 {
-    public enum ERespawnType
-    {
-        Warp,
-        Reset,
-        GameOver
-    }
 
     public class Player : MonoBehaviour
     {
-        public float Stamina;
+        public Fairy FairyRef;
+        private Respawner ScreenFader;
         public CharacterActor Controller;
-        public int Health;
+        
+        [SerializeField, ReadOnly] private int Health;
+        public const int HEALTH_MAX = 20;
+        public const int HEALTH_MIN = 0;
+        
+        [SerializeField, ReadOnly] private float Stamina;
+        public const int STAMINA_MAX = 20;
+        public const int STAMINA_MIN = 0;
+        public int StaminaDrain = 25;
+        public int StaminaRegen = 8;
+        
         public float TorchSearchRadius = 45f;
         public float CheckpointSearchRadius = 90f;
         public float SendFairyAngle = 25.0f;
         public float CheckpointTravelAngle = 10f;
-        public Fairy FairyRef;
+        
         [SerializeField, ReadOnly] private Checkpoint CurrentCheckpoint;
         [SerializeField, ReadOnly] private Resetpoint CurrentResetpoint;
-        private const int STAMINA_MAX = 20;
-        private const int STAMINA_MIN = 0;
-        private const int HEALTH_MAX = 20;
-        private const int HEALTH_MIN = 0;
-        private RespawnManager ScreenFader;
+        private Transform LastGrounded;
 
-        public const float PRECISE_EPSILON = 1e-7f;
-        public const float EPSILON = 1e-5f;
 
 
         // Start is called before the first frame update
         void Start()
         {
-            
+            ScreenFader = FindObjectOfType<Respawner>();
             Health = HEALTH_MAX;
             Stamina = STAMINA_MAX;
-            Controller.OnGroundedStateEnter += CalculateFallDamage;
-            Controller.OnGroundedStateExit += FindNearestResetpoint;
-            ScreenFader = FindObjectOfType<RespawnManager>();
         }
 
 
@@ -70,40 +66,20 @@ namespace TOMBSATYR
 
         private void UpdateStamina()
         {
+            
             if (Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity != Vector3.zero)
             {
-                Stamina -= Time.deltaTime * 30;
+                Stamina -= Time.deltaTime * StaminaDrain;
                 Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
             }
             else if (!Input.GetButton("Run") && !Mathf.Approximately(GetNormalizedStamina(), 1f) 
                      || (Controller.Velocity == Vector3.zero && Controller.IsGrounded))
             {
-                Stamina += (Time.deltaTime * 15);
+                Stamina += (Time.deltaTime * StaminaRegen);
                 Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
             }
         }
 
-        private void CalculateFallDamage(Vector3 velocity)
-        {
-            if (velocity.y < -30)
-            {
-                print(velocity.y);
-            }
-
-            float fallVelocity = velocity.y;
-
-            int fallDamage = (Mathf.Abs(fallVelocity)) switch
-            {
-                < 30 => 0,
-                < 40 => -10,
-                < 50 => -12,
-                < 60 => -16,
-                _ => -20
-            };
-
-            UpdateHealth(fallDamage);
-
-        }
 
         public void UpdateHealth(int modifier)
         {
@@ -238,7 +214,8 @@ namespace TOMBSATYR
                 FairyRef.GoFairy(foundTorches[0].transform);
             }
         }
-
+        
+        
         private void FindNearestResetpoint()
         {
             // Get the player's position
