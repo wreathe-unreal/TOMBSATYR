@@ -4,140 +4,143 @@ using Lightbug.Utilities;
 using UnityEngine;
 using UnityEngine.Events;
 
-public enum EPlatformState
+namespace TOMBSATYR
 {
-    Idle,
-    Moving,
-    Waiting
-}
-
-public class Platform : MonoBehaviour
-{
-    public float Speed = 40.0f; // Speed of the platform
-    public Vector3 Origin; // Starting position
-    public Vector3 Destination; // Ending position
-    public bool bConstantMotion = false; // If true, platform moves from the start
-    public bool bWaitOnArrive = true; // If the platform should wait when it arrives
-    public float ArrivalWaitTime = 0.0f; // Amount of time to wait before moving again, if 0 wait forever
-
-    [SerializeField, ReadOnly] private Vector3 Target;
-    [SerializeField, ReadOnly] private EPlatformState PlatformState;
-    private bool bWaitingPlatformMoved = false;
-    private Coroutine waitCoroutine = null;
-
-    
-    void Start()
+    public enum EPlatformState
     {
-        PlatformState = EPlatformState.Idle;
-        Target = Destination;
-
-        if (bConstantMotion)
-        {
-            StartMoving();
-        }
+        Idle,
+        Moving,
+        Waiting
     }
 
-    void SwitchDirection()
+    public class Platform : MonoBehaviour
     {
-        Target = (Target == Origin) ? Destination : Origin;
-    }
+        public float Speed = 40.0f; // Speed of the platform
+        public Vector3 Origin; // Starting position
+        public Vector3 Destination; // Ending position
+        public bool bConstantMotion = false; // If true, platform moves from the start
+        public bool bWaitOnArrive = true; // If the platform should wait when it arrives
+        public float ArrivalWaitTime = 0.0f; // Amount of time to wait before moving again, if 0 wait forever
 
-    void Update()
-    {
+        [SerializeField, ReadOnly] private Vector3 Target;
+        [SerializeField, ReadOnly] private EPlatformState PlatformState;
+        private bool bWaitingPlatformMoved = false;
+        private Coroutine waitCoroutine = null;
 
-        if (bConstantMotion)
-        {
-            StartMoving();
-        }
-        
-        if (PlatformState == EPlatformState.Moving)
-        {
-            MovePlatform();
-        }
-    }
 
-    public void StartMoving()
-    {
-        if (PlatformState == EPlatformState.Idle || PlatformState == EPlatformState.Waiting)
+        void Start()
         {
-            PlatformState = EPlatformState.Moving;
-            bWaitingPlatformMoved = false;
-            if (waitCoroutine != null)
+            PlatformState = EPlatformState.Idle;
+            Target = Destination;
+
+            if (bConstantMotion)
             {
-                StopCoroutine(waitCoroutine);
-                waitCoroutine = null;
+                StartMoving();
             }
         }
-    }
 
-    private void MovePlatform()
-    {
-        if (PlatformState != EPlatformState.Moving)
+        void SwitchDirection()
         {
-            return;
+            Target = (Target == Origin) ? Destination : Origin;
         }
-        
-        float step = Speed * Time.deltaTime;
-        transform.position = Vector3.MoveTowards(transform.position, Target, step);
 
-        if (Vector3.Distance(transform.position, Target) < 0.01f) // Use a smaller precision value
+        void Update()
         {
-            SwitchDirection();
 
-            if (bWaitOnArrive)
+            if (bConstantMotion)
             {
-                if (ArrivalWaitTime > 0f)
+                StartMoving();
+            }
+
+            if (PlatformState == EPlatformState.Moving)
+            {
+                MovePlatform();
+            }
+        }
+
+        public void StartMoving()
+        {
+            if (PlatformState == EPlatformState.Idle || PlatformState == EPlatformState.Waiting)
+            {
+                PlatformState = EPlatformState.Moving;
+                bWaitingPlatformMoved = false;
+                if (waitCoroutine != null)
                 {
-                    PlatformState = EPlatformState.Waiting;
-                    waitCoroutine = StartCoroutine(WaitAtDestination());   
+                    StopCoroutine(waitCoroutine);
+                    waitCoroutine = null;
                 }
-                else
+            }
+        }
+
+        private void MovePlatform()
+        {
+            if (PlatformState != EPlatformState.Moving)
+            {
+                return;
+            }
+
+            float step = Speed * Time.deltaTime;
+            transform.position = Vector3.MoveTowards(transform.position, Target, step);
+
+            if (Vector3.Distance(transform.position, Target) < 0.01f) // Use a smaller precision value
+            {
+                SwitchDirection();
+
+                if (bWaitOnArrive)
+                {
+                    if (ArrivalWaitTime > 0f)
+                    {
+                        PlatformState = EPlatformState.Waiting;
+                        waitCoroutine = StartCoroutine(WaitAtDestination());
+                    }
+                    else
+                    {
+                        PlatformState = EPlatformState.Idle;
+                    }
+                }
+                else if (!bConstantMotion)
                 {
                     PlatformState = EPlatformState.Idle;
                 }
             }
-            else if (!bConstantMotion)
+        }
+
+        private IEnumerator WaitAtDestination()
+        {
+            if (ArrivalWaitTime == 0f)
+            {
+                yield break;
+            }
+
+            yield return new WaitForSeconds(ArrivalWaitTime);
+
+            if (bConstantMotion || bWaitingPlatformMoved)
+            {
+                PlatformState = EPlatformState.Moving;
+                bWaitingPlatformMoved = false;
+            }
+            else
             {
                 PlatformState = EPlatformState.Idle;
             }
         }
-    }
 
-    private IEnumerator WaitAtDestination()
-    {
-        if (ArrivalWaitTime == 0f)
+        // Easing function for smooth movement
+        private float EaseInOutQuad(float t)
         {
-            yield break;
+            t = Mathf.Clamp01(t);
+            return t < 0.5f ? 2 * t * t : -1 + (4 - 2 * t) * t;
         }
-        
-        yield return new WaitForSeconds(ArrivalWaitTime);
 
-        if (bConstantMotion || bWaitingPlatformMoved)
+        public void Trigger()
         {
-            PlatformState = EPlatformState.Moving;
-            bWaitingPlatformMoved = false;
-        }
-        else
-        {
-            PlatformState = EPlatformState.Idle;
-        }
-    }
+            if (PlatformState == EPlatformState.Moving)
+            {
+                PlatformState = EPlatformState.Idle;
+                return;
+            }
 
-    // Easing function for smooth movement
-    private float EaseInOutQuad(float t)
-    {
-        t = Mathf.Clamp01(t);
-        return t < 0.5f ? 2 * t * t : -1 + (4 - 2 * t) * t;
-    }
-
-    public void Trigger()
-    {
-        if (PlatformState == EPlatformState.Moving)
-        {
-            PlatformState = EPlatformState.Idle;
-            return;
+            StartMoving();
         }
-        
-        StartMoving();
     }
 }

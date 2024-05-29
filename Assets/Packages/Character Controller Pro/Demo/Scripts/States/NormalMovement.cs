@@ -2,13 +2,13 @@ using UnityEngine;
 using Lightbug.CharacterControllerPro.Core;
 using Lightbug.Utilities;
 using Lightbug.CharacterControllerPro.Implementation;
+using Unity.Plastic.Newtonsoft.Json.Serialization;
 
 namespace Lightbug.CharacterControllerPro.Demo
 {
     [AddComponentMenu("Character Controller Pro/Demo/Character/States/Normal Movement")]
     public class NormalMovement : CharacterState
     {
-
         [Space(10)]
 
         public PlanarMovementParameters planarMovementParameters = new PlanarMovementParameters();
@@ -72,7 +72,9 @@ namespace Lightbug.CharacterControllerPro.Demo
         protected MaterialController materialController = null;
         protected int notGroundedJumpsLeft = 0;
         protected bool isAllowedToCancelJump = false;
+
         protected bool wantToRun = false;
+
         protected float currentPlanarSpeedLimit = 0f;
 
         protected bool groundedJumpAvailable = true;
@@ -111,6 +113,8 @@ namespace Lightbug.CharacterControllerPro.Demo
 
             float minCrouchHeightRatio = CharacterActor.BodySize.x / CharacterActor.BodySize.y;
             crouchParameters.heightRatio = Mathf.Max(minCrouchHeightRatio, crouchParameters.heightRatio);
+            
+            wantToRun = false;
         }
 
         protected virtual void OnEnable()

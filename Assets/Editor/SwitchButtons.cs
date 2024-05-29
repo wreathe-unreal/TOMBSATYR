@@ -1,6 +1,7 @@
 // SwitchEditor.cs
 using UnityEditor;
 using UnityEngine;
+using TOMBSATYR;
 
 [CustomEditor(typeof(Switch))]
 public class SwitchEditor : Editor

@@ -1,5 +1,5 @@
 {
-    "name": "com.lightbug.character-controller-pro",
+    "name": "Digicraft.Gem",
     "rootNamespace": "",
     "references": [],
     "includePlatforms": [],
@@ -9,12 +9,6 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [
-        {
-            "name": "com.unity.modules.terrain",
-            "expression": "",
-            "define": "UNITY_TERRAIN_MODULE"
-        }
-    ],
+    "versionDefines": [],
     "noEngineReferences": false
 }
