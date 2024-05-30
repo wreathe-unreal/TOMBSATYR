@@ -1,8 +1,11 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using Lightbug.CharacterControllerPro.Core;
 using Lightbug.Utilities;
 using Lightbug.CharacterControllerPro.Implementation;
 using Unity.Plastic.Newtonsoft.Json.Serialization;
+using UnityEngine.TextCore.Text;
 
 namespace Lightbug.CharacterControllerPro.Demo
 {
@@ -69,7 +72,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         #endregion
 
         protected MaterialController materialController = null;
-        protected int notGroundedJumpsLeft = 0;
+        public int notGroundedJumpsLeft = 0;
         protected bool isAllowedToCancelJump = false;
         
         protected bool wantToRun = false;
@@ -107,9 +110,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         protected override void Start()
         {
             base.Start();
-
-            CharacterActor.OnWallHit += CheckUngroundedJumps;
-
+            
             targetHeight = CharacterActor.DefaultBodySize.y;
 
             float minCrouchHeightRatio = CharacterActor.BodySize.x / CharacterActor.BodySize.y;
@@ -580,9 +581,22 @@ namespace Lightbug.CharacterControllerPro.Demo
                 if (CharacterActor.IsGrounded)
                     CharacterActor.ForceNotGrounded();
 
-                // First remove any velocity associated with the jump direction.
-                CharacterActor.Velocity -= Vector3.Project(CharacterActor.Velocity, jumpDirection);
-                CharacterActor.Velocity += CustomUtilities.Multiply(jumpDirection, verticalMovementParameters.jumpSpeed);
+                switch (jumpResult)
+                {
+                    case JumpResult.Grounded:
+                        // First remove any velocity associated with the jump direction.
+                        // First remove any velocity associated with the jump direction.
+                        CharacterActor.Velocity -= Vector3.Project(CharacterActor.Velocity, jumpDirection);
+                        CharacterActor.Velocity += CustomUtilities.Multiply(jumpDirection, verticalMovementParameters.jumpSpeed);
+                        break;
+                    case JumpResult.NotGrounded:
+                        StartCoroutine(UngroundedJumpLookCoro());
+                        CharacterActor.Velocity += (20 * CharacterActor.Up) + (6 * CharacterActor.WallContact.normal); //+ (Input.GetAxis("Horizontal") * CharacterActor.LocalInputVelocity);
+                        break;
+                    default:
+                        break;
+                }
+                //lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
 
                 if (verticalMovementParameters.cancelJumpOnRelease)
                     isAllowedToCancelJump = true;
@@ -590,6 +604,15 @@ namespace Lightbug.CharacterControllerPro.Demo
             }
 
 
+        }
+
+        IEnumerator UngroundedJumpLookCoro()
+        {
+            lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+
+            yield return new WaitForSecondsRealtime(.1f);
+
+            lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
         }
 
         /// <summary>
@@ -805,11 +828,6 @@ namespace Lightbug.CharacterControllerPro.Demo
         {
             ProcessVerticalMovement(dt);
             ProcessPlanarMovement(dt);
-        }
-
-        public void CheckUngroundedJumps(Contact other)
-        {
-            notGroundedJumpsLeft = verticalMovementParameters.availableNotGroundedJumps;
         }
     }
 }

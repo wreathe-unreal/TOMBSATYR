@@ -167,8 +167,8 @@ namespace Lightbug.CharacterControllerPro.Demo
                 CharacterActor.TurnAround();
 
                 // Apply the wall jump velocity.
-                CharacterActor.Velocity = jumpVerticalVelocity * CharacterActor.Up + jumpNormalVelocity * CharacterActor.WallContact.normal;
-            }
+                
+            }CharacterActor.Velocity = jumpVerticalVelocity * CharacterActor.Up + jumpNormalVelocity * CharacterActor.WallContact.normal;
 
             if (modifySize)
             {

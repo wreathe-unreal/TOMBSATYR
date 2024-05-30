@@ -6,6 +6,7 @@ using Lightbug.CharacterControllerPro.Demo;
 using Lightbug.Utilities;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.VFX;
 
 namespace TOMBSATYR
 {
@@ -30,11 +31,13 @@ namespace TOMBSATYR
         public float CheckpointSearchRadius = 90f;
         public float SendFairyAngle = 25.0f;
         public float CheckpointTravelAngle = 10f;
+        public float GhostDuration = .25f;
         
         [SerializeField, ReadOnly] private Checkpoint CurrentCheckpoint;
         [SerializeField, ReadOnly] private Resetpoint CurrentResetpoint;
         private Transform LastGrounded;
 
+        
 
 
         // Start is called before the first frame update

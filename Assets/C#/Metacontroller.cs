@@ -15,37 +15,70 @@ namespace TOMBSATYR
         private Player PlayerRef;
         private NormalMovement CharacterMovement;
         private CharacterBody PhysicsBody;
+        private Camera PlayerCamera;
 
-        public float LongJumpForce = 20f;
+        public float LongJumpForce = 15f;
         public int RunningSlopeAngleModifier = 5;
-            
+        public float JumpApexDurationModifier = .025f;
+
+        public float RunningFOV = 65f;
+        
+        
         public const float EPSILON_PRECISE = 1e-7f;
         public const float EPSILON = 1e-5f;
 
         private int UngroundedJumpsPerformed = 0;
+        private float DefaultSlopeLimit;
+        private Coroutine ModifyFieldOfViewCoro;
+        private float DefaultFOV;
+        private float DefaultJumpApexDuration;
+        
+
 
         void Start()
         {
+            PlayerCamera = GetComponentInChildren<Camera>();
             PlayerRef = GetComponent<Player>();
             Controller = GetComponentInChildren<CharacterActor>();
             PhysicsBody = GetComponentInChildren<CharacterBody>();
             CharacterMovement = transform.Find("Controller/States").GetComponent<NormalMovement>();
 
-            Controller.OnWallHit += AddUngroundedJump;
-            
+            Controller.OnWallHit += AddUngroundedJump; //walljump
+
             Controller.OnGroundedStateEnter += ResetUngroundedJumps;
             Controller.OnGroundedStateEnter += CalculateFallDamage;
             Controller.OnGroundedStateEnter += ResetLookDirectionParams;
+            Controller.OnGroundedStateEnter += ResetJumpApex;
             
             CharacterMovement.OnGroundedJumpPerformed += HandleLongJump;
             CharacterMovement.OnNotGroundedJumpPerformed += HandleUngroundedJump;
+            CharacterMovement.OnNotGroundedJumpPerformed += ModifyJumpApex;
+
+            DefaultSlopeLimit = Controller.slopeLimit;
+            DefaultFOV = PlayerCamera.fieldOfView;
+            DefaultJumpApexDuration = CharacterMovement.verticalMovementParameters.jumpApexDuration;
+
             //Controller.OnGroundedStateExit += FindNearestResetpoint;
+        }
+
+        private void ResetJumpApex(Vector3 obj)
+        {
+            CharacterMovement.verticalMovementParameters.jumpApexDuration = DefaultJumpApexDuration;
+        }
+
+        private void ModifyJumpApex(int obj)
+        {
+
+            if (Mathf.Approximately(CharacterMovement.verticalMovementParameters.jumpApexDuration, DefaultJumpApexDuration))
+            {
+                CharacterMovement.verticalMovementParameters.jumpApexDuration += JumpApexDurationModifier;
+            }
         }
 
         private void HandleUngroundedJump(int obj)
         {
             UngroundedJumpsPerformed++;
-            print(UngroundedJumpsPerformed);
+            print("performed:" +  UngroundedJumpsPerformed);
         }
 
         void Update()
@@ -56,9 +89,30 @@ namespace TOMBSATYR
         private void FrameMovementOverrides()
         {
             CharacterMovement.planarMovementParameters.canRun = PlayerRef.GetNormalizedStamina() > 0;
-            Controller.slopeLimit = Controller.slopeLimit + (Convert.ToInt32(CharacterMovement.IsRunning()) * RunningSlopeAngleModifier);
+
+            HandleSprint();
         }
-        
+
+        private void HandleSprint()
+        {   
+            if (CharacterMovement.IsRunning())
+            {
+                if (!Mathf.Approximately(Controller.slopeLimit, DefaultSlopeLimit))
+                {
+                    Controller.slopeLimit += RunningSlopeAngleModifier;
+                }
+
+                PlayerCamera.fieldOfView = Mathf.Clamp(PlayerCamera.fieldOfView + Time.deltaTime * 15f, DefaultFOV, RunningFOV);
+            }
+            else
+            {
+                Controller.slopeLimit = DefaultSlopeLimit;
+
+                
+                PlayerCamera.fieldOfView = Mathf.Clamp(PlayerCamera.fieldOfView - Time.deltaTime * 15f, DefaultFOV, RunningFOV);
+            }
+        }
+
         private void ResetUngroundedJumps(Vector3 obj)
         {
             CharacterMovement.verticalMovementParameters.availableNotGroundedJumps = 0;
@@ -67,18 +121,20 @@ namespace TOMBSATYR
 
         private void AddUngroundedJump(Contact obj)
         {
-            if (Controller.IsGrounded)
+            if (Controller.IsGrounded || Controller.IsOnUnstableGround)
             {
                 return;
             }
-
+            
             if (UngroundedJumpsPerformed >= 3)
             {
                 CharacterMovement.verticalMovementParameters.availableNotGroundedJumps = 0;
                 return;
             }
+            
             CharacterMovement.verticalMovementParameters.availableNotGroundedJumps++;
-            CharacterMovement.verticalMovementParameters.availableNotGroundedJumps = Mathf.Clamp(CharacterMovement.verticalMovementParameters.availableNotGroundedJumps, 0 , 3);
+            CharacterMovement.verticalMovementParameters.availableNotGroundedJumps = Mathf.Clamp(CharacterMovement.verticalMovementParameters.availableNotGroundedJumps, 0, 3);
+            CharacterMovement.notGroundedJumpsLeft = CharacterMovement.verticalMovementParameters.availableNotGroundedJumps;
         }
 
         private void ResetLookDirectionParams(Vector3 obj)
@@ -95,6 +151,7 @@ namespace TOMBSATYR
                 PhysicsBody.RigidbodyComponent.AddForce(fwd * LongJumpForce * Vector3.Dot(Controller.Velocity, Controller.Forward));
                 
                 CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+
             }
         }
         
