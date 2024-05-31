@@ -84,7 +84,7 @@ namespace TOMBSATYR
             }
             else if (!Input.GetButton("Run") && !Mathf.Approximately(GetNormalizedStamina(), 1f) || (Controller.Velocity == Vector3.zero && Controller.IsGrounded))
             {
-                StaminaConsumed = 0f;
+                StaminaConsumed = 0 + Metacontroller.EPSILON_PRECISE;
                 Stamina += (Time.deltaTime * StaminaRegen);
                 Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
             }

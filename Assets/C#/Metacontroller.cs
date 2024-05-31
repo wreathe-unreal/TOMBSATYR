@@ -152,10 +152,11 @@ namespace TOMBSATYR
             if (CharacterMovement.IsRunning() && Input.GetButton("Run"))
             {
                 Vector3 fwd = Controller.Forward;
-
-                PhysicsBody.RigidbodyComponent.AddForce(fwd * LongJumpForce / (PlayerRef.GetConsumedStamina() / Player.STAMINA_MAX) * Vector3.Dot(Controller.Velocity, Controller.Forward));
-                
-                CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+                if (PlayerRef.GetConsumedStamina() > 2.0f)
+                {
+                    PhysicsBody.RigidbodyComponent.AddForce(fwd * LongJumpForce / (Player.STAMINA_MAX / PlayerRef.GetConsumedStamina()) * Vector3.Dot(Controller.Velocity, Controller.Forward));
+                    CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+                }
 
             }
         }
