@@ -72,24 +72,43 @@ namespace TOMBSATYR
         {
             return StaminaConsumed;
         }
+
+        public void ResetConsumedStamina()
+        {
+            StaminaConsumed = 0f + Metacontroller.EPSILON_PRECISE;
+        }
         
         private void UpdateStamina()
         {
             
             if (Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity != Vector3.zero)
             {
-                Stamina -= Time.deltaTime * StaminaDrain;
-                StaminaConsumed += Time.deltaTime * StaminaDrain;
-                Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
+                if (Stamina > STAMINA_MIN)
+                {
+                    Stamina -= Time.deltaTime * StaminaDrain;
+                    StaminaConsumed += Time.deltaTime * StaminaDrain;
+                    Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
+                }
             }
             else if (!Input.GetButton("Run") && !Mathf.Approximately(GetNormalizedStamina(), 1f) || (Controller.Velocity == Vector3.zero && Controller.IsGrounded))
             {
-                StaminaConsumed = 0 + Metacontroller.EPSILON_PRECISE;
+                if (StaminaConsumed != 0)
+                {
+                    StartCoroutine(ResetStaminaConsumedAfterDelay(0.2f)); //essentially coyote time but for stamina consumption for our jumps
+                }
                 Stamina += (Time.deltaTime * StaminaRegen);
                 Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
             }
         }
 
+        private IEnumerator ResetStaminaConsumedAfterDelay(float delay)
+        {
+            // Wait for the specified delay
+            yield return new WaitForSeconds(delay);
+        
+            // Set StaminaConsumed to 0 + Metacontroller.EPSILON_PRECISE
+            ResetConsumedStamina();
+        }
 
         public void UpdateHealth(int modifier)
         {

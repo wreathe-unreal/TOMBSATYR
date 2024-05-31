@@ -149,13 +149,15 @@ namespace TOMBSATYR
 
         private void HandleLongJump(bool obj)
         {
-            if (CharacterMovement.IsRunning() && Input.GetButton("Run"))
+            if (Input.GetButton("Run"))
             {
                 Vector3 fwd = Controller.Forward;
                 if (PlayerRef.GetConsumedStamina() > 2.0f)
                 {
                     PhysicsBody.RigidbodyComponent.AddForce(fwd * LongJumpForce / (Player.STAMINA_MAX / PlayerRef.GetConsumedStamina()) * Vector3.Dot(Controller.Velocity, Controller.Forward));
+                    print(PlayerRef.GetConsumedStamina());
                     CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+                    PlayerRef.ResetConsumedStamina();
                 }
 
             }
