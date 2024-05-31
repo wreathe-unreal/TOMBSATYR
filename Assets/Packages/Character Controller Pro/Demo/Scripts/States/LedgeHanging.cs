@@ -64,6 +64,12 @@ namespace Lightbug.CharacterControllerPro.Demo
         [SerializeField]
         protected bool autoClimbUp = true;
 
+        [SerializeField] protected bool enableTraverse = true;
+
+        [SerializeField] protected float traverseSpeed = 5f;
+
+        [SerializeField] protected float traverseAcceleration = 5f;
+
         [Tooltip("If the previous state (\"fromState\") is contained in this list the autoClimbUp flag will be triggered.")]
         [SerializeField]
         protected CharacterState[] forceAutoClimbUpStates = null;
@@ -72,6 +78,9 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         [SerializeField]
         protected string topUpParameter = "TopUp";
+        
+        [SerializeField]
+        protected string traverseParameter = "isTraversing";
 
 
 
@@ -83,7 +92,8 @@ namespace Lightbug.CharacterControllerPro.Demo
         public enum LedgeHangingState
         {
             Idle,
-            TopUp
+            TopUp,
+            Traverse
         }
 
         protected LedgeHangingState state;
@@ -244,7 +254,11 @@ namespace Lightbug.CharacterControllerPro.Demo
                     {
                         forceExit = true;
                     }
-
+                    else if (CharacterActions.movement.Right || CharacterActions.movement.Left)
+                    {
+                        state = LedgeHangingState.Traverse;
+                        CharacterActor.Animator.SetBool(traverseParameter, true);
+                    }
                     break;
 
                 case LedgeHangingState.TopUp:
@@ -257,23 +271,48 @@ namespace Lightbug.CharacterControllerPro.Demo
 
 
                     break;
+                
+                case LedgeHangingState.Traverse:
+
+                    Vector3 targetVelocity = enableTraverse ? CharacterActions.movement.value.x * CharacterActor.Right * traverseSpeed : Vector3.zero;
+                    Vector3 posOffset = Vector3.MoveTowards(CharacterActor.Velocity, targetVelocity, traverseAcceleration* dt);
+                    
+                    if (!IsValidLedge(CharacterActor.Position + posOffset))
+                    {
+                        print("invalid ledge");
+                        state = LedgeHangingState.Idle;
+                        CharacterActor.Animator.SetBool(traverseParameter, false);
+                        return;
+                    }
+                    
+                    CharacterActor.Position += posOffset;
+
+                    if (!CharacterActions.movement.Right && !CharacterActions.movement.Left)
+                    {
+                        state = LedgeHangingState.Idle;
+                        
+                        // Root motion
+                        CharacterActor.SetUpRootMotion(
+                            true,
+                            PhysicsActor.RootMotionVelocityType.SetVelocity,
+                            false
+                        );
+                        
+                        CharacterActor.Animator.SetBool(traverseParameter, false);
+                    }
+                    break;
             }
 
 
         }
 
 
-
         bool IsValidLedge(Vector3 characterPosition)
         {
-            if (!CharacterActor.WallCollision)
-                return false;
+            //if (!CharacterActor.WallCollision && state != LedgeHangingState.Traverse)
+            //   return false;
 
-            DetectLedge(
-                characterPosition,
-                out leftHitInfo,
-                out rightHitInfo
-            );
+            DetectLedge(characterPosition, out leftHitInfo, out rightHitInfo);
 
             if (!leftHitInfo.hit || !rightHitInfo.hit)
                 return false;
@@ -301,26 +340,34 @@ namespace Lightbug.CharacterControllerPro.Demo
 
 
             Vector3 sideDirection = Vector3.Cross(CharacterActor.Up, forwardDirection);
-
+            
+            float upCastOffset;
+            
+            if (state == LedgeHangingState.Traverse)
+            {
+                upCastOffset= upwardsDetectionOffset +.25f;
+            }
+            else
+            {
+                upCastOffset = upwardsDetectionOffset;
+            }
+            
             // Check if there is an object above
-            Vector3 upDetection = position + CharacterActor.Up * (upwardsDetectionOffset);
+            Vector3 upDetection = position + CharacterActor.Up * upCastOffset;
+            
+            CharacterActor.PhysicsComponent.Raycast(out HitInfo auxHitInfo, CharacterActor.Center, upDetection - CharacterActor.Center, in ledgeHitInfoFilter);
 
-            CharacterActor.PhysicsComponent.Raycast(
-                out HitInfo auxHitInfo,
-                CharacterActor.Center,
-                upDetection - CharacterActor.Center,
-                in ledgeHitInfoFilter
-            );
-
-
+            //print("up:" + auxHitInfo.hit);
+            
             if (auxHitInfo.hit)
                 return;
 
-            Vector3 middleOrigin = upDetection + forwardDirection * (forwardDetectionOffset);
-
+            Vector3 middleOrigin = upDetection + forwardDirection * (forwardDetectionOffset); // for further ledge hangs add here
             Vector3 leftOrigin = middleOrigin - sideDirection * (separationBetweenHands / 2f);
             Vector3 rightOrigin = middleOrigin + sideDirection * (separationBetweenHands / 2f);
 
+            
+            //left raycast
             CharacterActor.PhysicsComponent.Raycast(
                 out leftHitInfo,
                 leftOrigin,
@@ -328,13 +375,42 @@ namespace Lightbug.CharacterControllerPro.Demo
                 in ledgeHitInfoFilter
             );
 
+            //print("lh:" + leftHitInfo.hit);
 
+            LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
+
+
+            if (lineRenderer == null)
+            {
+                lineRenderer = gameObject.AddComponent<LineRenderer>();
+            }
+            
+            lineRenderer.startWidth = 0.1f;
+            lineRenderer.endWidth = 0.1f;
+            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            lineRenderer.startColor = Color.red;
+            lineRenderer.endColor = Color.red;
+
+            // Set the positions of the line
+            Vector3[] positions = new Vector3[2];
+            positions[0] = leftOrigin;
+            positions[1] = leftOrigin + -CharacterActor.Up * ledgeDetectionDistance; // End point
+
+            lineRenderer.positionCount = positions.Length;
+            lineRenderer.SetPositions(positions);
+            
+            
+            
+
+            //right raycast
             CharacterActor.PhysicsComponent.Raycast(
                 out rightHitInfo,
                 rightOrigin,
                 -CharacterActor.Up * ledgeDetectionDistance,
                 in ledgeHitInfoFilter
             );
+            //print("rh:" + rightHitInfo.hit);
+
 
 
 

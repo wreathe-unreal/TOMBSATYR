@@ -70,7 +70,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         public event System.Action<int> OnNotGroundedJumpPerformed;
 
         #endregion
-
+        
         protected MaterialController materialController = null;
         public int notGroundedJumpsLeft = 0;
         protected bool isAllowedToCancelJump = false;
@@ -83,6 +83,8 @@ namespace Lightbug.CharacterControllerPro.Demo
         protected Vector3 jumpDirection = default(Vector3);
 
         protected Vector3 targetLookingDirection = default(Vector3);
+
+        
         protected float targetHeight = 1f;
 
         protected bool wantToCrouch = false;
@@ -591,7 +593,31 @@ namespace Lightbug.CharacterControllerPro.Demo
                         break;
                     case JumpResult.NotGrounded:
                         StartCoroutine(UngroundedJumpLookCoro());
-                        CharacterActor.Velocity += (20 * CharacterActor.Up) + (6 * CharacterActor.WallContact.normal); //+ (Input.GetAxis("Horizontal") * CharacterActor.LocalInputVelocity);
+
+                        CharacterActor.Velocity = (12 * CharacterActor.Up);
+                        
+                        // Get the direction from the player to the point
+                        Vector3 directionToPoint = CharacterActor.WallContact.point - CharacterActor.Position;
+
+                        // Compute the dot product with the player's right vector
+                        float dotProduct = Vector3.Dot(CharacterActor.Right, directionToPoint);
+                        
+                        Quaternion rotation = Quaternion.identity;;
+                        // Determine the side based on the sign of the dot product
+                        if (dotProduct > 0)
+                        {
+                            print("right");
+                            rotation = Quaternion.AngleAxis(verticalMovementParameters.ungroundedJumpAngleModifier, CharacterActor.Up);
+
+                        }
+                        else if (dotProduct < 0)
+                        {
+                            print("left");
+                            rotation = Quaternion.AngleAxis(-verticalMovementParameters.ungroundedJumpAngleModifier, CharacterActor.Up);
+
+                        }
+                        
+                        CharacterActor.Velocity += rotation * (8 * CharacterActor.WallContact.normal); //+ (Input.GetAxis("Horizontal") * CharacterActor.LocalInputVelocity);
                         break;
                     default:
                         break;

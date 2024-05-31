@@ -17,7 +17,7 @@ namespace TOMBSATYR
         private CharacterBody PhysicsBody;
         private Camera PlayerCamera;
 
-        public float LongJumpForce = 15f;
+        public float LongJumpForce = 17f;
         public int RunningSlopeAngleModifier = 5;
         public float JumpApexDurationModifier = .025f;
 
@@ -32,6 +32,8 @@ namespace TOMBSATYR
         private Coroutine ModifyFieldOfViewCoro;
         private float DefaultFOV;
         private float DefaultJumpApexDuration;
+
+        private float FrameFallVelocity = 0f;
         
 
 
@@ -44,7 +46,7 @@ namespace TOMBSATYR
             CharacterMovement = transform.Find("Controller/States").GetComponent<NormalMovement>();
 
             Controller.OnWallHit += AddUngroundedJump; //walljump
-
+            
             Controller.OnGroundedStateEnter += ResetUngroundedJumps;
             Controller.OnGroundedStateEnter += CalculateFallDamage;
             Controller.OnGroundedStateEnter += ResetLookDirectionParams;
@@ -84,6 +86,7 @@ namespace TOMBSATYR
         void Update()
         {
             FrameMovementOverrides();
+            FrameFallVelocity = Controller.Velocity.y;
         }
         
         private void FrameMovementOverrides()
@@ -116,11 +119,13 @@ namespace TOMBSATYR
         private void ResetUngroundedJumps(Vector3 obj)
         {
             CharacterMovement.verticalMovementParameters.availableNotGroundedJumps = 0;
+            CharacterMovement.notGroundedJumpsLeft = 0;
             UngroundedJumpsPerformed = 0;
         }
 
         private void AddUngroundedJump(Contact obj)
         {
+            print("wall hit");
             if (Controller.IsGrounded || Controller.IsOnUnstableGround)
             {
                 return;
@@ -129,12 +134,12 @@ namespace TOMBSATYR
             if (UngroundedJumpsPerformed >= 3)
             {
                 CharacterMovement.verticalMovementParameters.availableNotGroundedJumps = 0;
+                CharacterMovement.notGroundedJumpsLeft = 0;
                 return;
             }
             
-            CharacterMovement.verticalMovementParameters.availableNotGroundedJumps++;
-            CharacterMovement.verticalMovementParameters.availableNotGroundedJumps = Mathf.Clamp(CharacterMovement.verticalMovementParameters.availableNotGroundedJumps, 0, 3);
-            CharacterMovement.notGroundedJumpsLeft = CharacterMovement.verticalMovementParameters.availableNotGroundedJumps;
+            CharacterMovement.verticalMovementParameters.availableNotGroundedJumps = Mathf.Clamp(CharacterMovement.verticalMovementParameters.availableNotGroundedJumps++, 0, 3);
+            CharacterMovement.notGroundedJumpsLeft = 1;
         }
 
         private void ResetLookDirectionParams(Vector3 obj)
@@ -158,14 +163,7 @@ namespace TOMBSATYR
         
         private void CalculateFallDamage(Vector3 velocity)
         {
-            if (velocity.y < -30)
-            {
-                print(velocity.y);
-            }
-
-            float fallVelocity = velocity.y;
-
-            int fallDamage = (Mathf.Abs(fallVelocity)) switch
+            int fallDamage = (Mathf.Abs(FrameFallVelocity)) switch
             {
                 < 30 => 0,
                 < 40 => -10,
