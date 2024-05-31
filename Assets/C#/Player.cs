@@ -24,8 +24,9 @@ namespace TOMBSATYR
         [SerializeField, ReadOnly] private float Stamina;
         public const int STAMINA_MAX = 20;
         public const int STAMINA_MIN = 0;
-        public int StaminaDrain = 25;
-        public int StaminaRegen = 8;
+        public float StaminaDrain = 20;
+        public float StaminaRegen = 8;
+        private float StaminaConsumed = 0f;
         
         public float TorchSearchRadius = 45f;
         public float CheckpointSearchRadius = 90f;
@@ -67,17 +68,23 @@ namespace TOMBSATYR
             return Stamina / STAMINA_MAX;
         }
 
+        public float GetConsumedStamina()
+        {
+            return StaminaConsumed;
+        }
+        
         private void UpdateStamina()
         {
             
             if (Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity != Vector3.zero)
             {
                 Stamina -= Time.deltaTime * StaminaDrain;
+                StaminaConsumed += Time.deltaTime * StaminaDrain;
                 Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
             }
-            else if (!Input.GetButton("Run") && !Mathf.Approximately(GetNormalizedStamina(), 1f) 
-                     || (Controller.Velocity == Vector3.zero && Controller.IsGrounded))
+            else if (!Input.GetButton("Run") && !Mathf.Approximately(GetNormalizedStamina(), 1f) || (Controller.Velocity == Vector3.zero && Controller.IsGrounded))
             {
+                StaminaConsumed = 0f;
                 Stamina += (Time.deltaTime * StaminaRegen);
                 Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
             }

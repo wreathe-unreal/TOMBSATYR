@@ -85,8 +85,8 @@ namespace TOMBSATYR
 
         void Update()
         {
-            FrameMovementOverrides();
             FrameFallVelocity = Controller.Velocity.y;
+            FrameMovementOverrides();
         }
         
         private void FrameMovementOverrides()
@@ -153,7 +153,7 @@ namespace TOMBSATYR
             {
                 Vector3 fwd = Controller.Forward;
 
-                PhysicsBody.RigidbodyComponent.AddForce(fwd * LongJumpForce * Vector3.Dot(Controller.Velocity, Controller.Forward));
+                PhysicsBody.RigidbodyComponent.AddForce(fwd * LongJumpForce / (PlayerRef.GetConsumedStamina() / Player.STAMINA_MAX) * Vector3.Dot(Controller.Velocity, Controller.Forward));
                 
                 CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
 
