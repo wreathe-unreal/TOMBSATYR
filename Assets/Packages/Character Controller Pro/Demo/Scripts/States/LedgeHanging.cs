@@ -83,6 +83,8 @@ namespace Lightbug.CharacterControllerPro.Demo
         [SerializeField]
         protected string traverseParameter = "isTraversing";
 
+        [SerializeField] protected string traverseLeft = "traverseDirection";
+
 
 
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -326,6 +328,15 @@ namespace Lightbug.CharacterControllerPro.Demo
 
                     Vector3 targetVelocity = enableTraverse ? CharacterActions.movement.value.x * CharacterActor.Right * traverseSpeed : Vector3.zero;
                     Vector3 posOffset = Vector3.MoveTowards(CharacterActor.Velocity, targetVelocity, traverseAcceleration* dt);
+
+                    if (CharacterActions.movement.value.x > 0)
+                    {
+                        CharacterActor.Animator.SetBool(traverseLeft, false);
+                    }
+                    else
+                    {
+                        CharacterActor.Animator.SetBool(traverseLeft, true);
+                    }
                     
                     if (!IsValidLedge(CharacterActor.Position + posOffset))
                     {
