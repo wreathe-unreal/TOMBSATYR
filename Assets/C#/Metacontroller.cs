@@ -93,10 +93,10 @@ namespace TOMBSATYR
         {
             CharacterMovement.planarMovementParameters.canRun = PlayerRef.GetNormalizedStamina() > 0;
 
-            HandleSprint();
+            HandleRunning();
         }
 
-        private void HandleSprint()
+        private void HandleRunning()
         {   
             if (CharacterMovement.IsRunning())
             {
@@ -104,14 +104,11 @@ namespace TOMBSATYR
                 {
                     Controller.slopeLimit += RunningSlopeAngleModifier;
                 }
-
                 PlayerCamera.fieldOfView = Mathf.Clamp(PlayerCamera.fieldOfView + Time.deltaTime * 15f, DefaultFOV, RunningFOV);
             }
             else
             {
                 Controller.slopeLimit = DefaultSlopeLimit;
-
-                
                 PlayerCamera.fieldOfView = Mathf.Clamp(PlayerCamera.fieldOfView - Time.deltaTime * 15f, DefaultFOV, RunningFOV);
             }
         }
@@ -151,11 +148,9 @@ namespace TOMBSATYR
         {
             if (Input.GetButton("Run"))
             {
-                Vector3 fwd = Controller.Forward;
                 if (PlayerRef.GetConsumedStamina() > 2.0f)
                 {
-                    PhysicsBody.RigidbodyComponent.AddForce(fwd * LongJumpForce / (Player.STAMINA_MAX / PlayerRef.GetConsumedStamina()) * Vector3.Dot(Controller.Velocity, Controller.Forward));
-                    print(PlayerRef.GetConsumedStamina());
+                    PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * LongJumpForce / (Player.STAMINA_MAX / PlayerRef.GetConsumedStamina()) * Vector3.Dot(Controller.Velocity, Controller.Forward));
                     CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
                     PlayerRef.ResetConsumedStamina();
                 }
