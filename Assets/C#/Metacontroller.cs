@@ -5,6 +5,7 @@ using Lightbug.CharacterControllerPro.Core;
 using Lightbug.CharacterControllerPro.Demo;
 using Lightbug.Utilities;
 using UnityEngine;
+using UnityEngine.TextCore.Text;
 
 namespace TOMBSATYR
 {
@@ -34,6 +35,7 @@ namespace TOMBSATYR
         private float DefaultJumpApexDuration;
 
         private float FrameFallVelocity = 0f;
+
         
 
 
@@ -51,6 +53,10 @@ namespace TOMBSATYR
             Controller.OnGroundedStateEnter += CalculateFallDamage;
             Controller.OnGroundedStateEnter += ResetLookDirectionParams;
             Controller.OnGroundedStateEnter += ResetJumpApex;
+            Controller.OnGroundedStateEnter += SpawnPlume;
+            Controller.OnGroundedStateEnter += DisableGhost;
+            //Controller.OnGroundedStateExit += DebugMatrixMode;
+            //Controller.OnGroundedStateEnter += DebugMatrixModeOff;
             
             CharacterMovement.OnGroundedJumpPerformed += HandleLongJump;
             CharacterMovement.OnNotGroundedJumpPerformed += HandleUngroundedJump;
@@ -61,6 +67,26 @@ namespace TOMBSATYR
             DefaultJumpApexDuration = CharacterMovement.verticalMovementParameters.jumpApexDuration;
 
             //Controller.OnGroundedStateExit += FindNearestResetpoint;
+        }
+
+        private void DisableGhost(Vector3 obj)
+        {
+            PlayerRef.GhostFX.SetInactive();
+        }
+
+        private void SpawnPlume(Vector3 obj)
+        {
+            
+        }
+        
+        private void DebugMatrixMode()
+        {
+            Time.timeScale = .05f;
+        }
+        
+        private void DebugMatrixModeOff(Vector3 pos)
+        {
+            Time.timeScale = 1f;
         }
 
         private void ResetJumpApex(Vector3 obj)
@@ -79,14 +105,15 @@ namespace TOMBSATYR
 
         private void HandleUngroundedJump(int obj)
         {
+            PlayerRef.GhostFX.SetActive(.2f);
             UngroundedJumpsPerformed++;
-            print("performed:" +  UngroundedJumpsPerformed);
         }
 
         void Update()
         {
             FrameFallVelocity = Controller.Velocity.y;
             FrameMovementOverrides();
+
         }
         
         private void FrameMovementOverrides()
@@ -97,7 +124,9 @@ namespace TOMBSATYR
         }
 
         private void HandleRunning()
-        {   
+        {
+            //print(Controller.StableVelocity.magnitude);
+            
             if (CharacterMovement.IsRunning())
             {
                 if (!Mathf.Approximately(Controller.slopeLimit, DefaultSlopeLimit))
@@ -150,9 +179,19 @@ namespace TOMBSATYR
             {
                 if (PlayerRef.GetConsumedStamina() > 2.0f)
                 {
-                    PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * LongJumpForce / (Player.STAMINA_MAX / PlayerRef.GetConsumedStamina()) * Vector3.Dot(Controller.Velocity, Controller.Forward));
+                    float consumedStamina = PlayerRef.GetConsumedStamina();
+                    float staminaRatio = consumedStamina / Player.STAMINA_MAX;
+                    float forceMagnitude = LongJumpForce * staminaRatio * Vector3.Dot(Controller.Velocity, Controller.Forward);
+                    PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude);
+
+                    if (PlayerRef.GetConsumedStamina() > 10f)
+                    {
+                        PlayerRef.GhostFX.SetActive(.75f);
+                    }
+                    
                     CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
                     PlayerRef.ResetConsumedStamina();
+                    
                 }
 
             }

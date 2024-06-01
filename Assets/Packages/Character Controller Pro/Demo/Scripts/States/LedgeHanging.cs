@@ -3,6 +3,7 @@ using UnityEngine;
 using Lightbug.CharacterControllerPro.Core;
 using Lightbug.Utilities;
 using Lightbug.CharacterControllerPro.Implementation;
+using UnityEngine.TextCore.Text;
 
 namespace Lightbug.CharacterControllerPro.Demo
 {
@@ -157,19 +158,68 @@ namespace Lightbug.CharacterControllerPro.Demo
             CharacterActor.Velocity = Vector3.zero;
             CharacterActor.IsKinematic = true;
 
+            HitInfo ledgeHitInfo = new HitInfo();
+            Vector3 upDetection = CharacterActor.Position + CharacterActor.Up * upwardsDetectionOffset;
+            Vector3 middleOrigin = upDetection + CharacterActor.Forward * (forwardDetectionOffset); // for further ledge hangs add here
+            HitInfoFilter ledgeHitInfoFilter = new HitInfoFilter(layerMask, false, true);
+
+
+            Vector3 rayCastOrigin = CharacterActor.Top - CharacterActor.Up * .29f;
+            Vector3 rayCastDisplacement = CharacterActor.Forward * 0.8f;
+            
+            CharacterActor.PhysicsComponent.Raycast(
+                out ledgeHitInfo,
+                rayCastOrigin,
+                rayCastDisplacement,
+                in ledgeHitInfoFilter); //10 is ledgedetectiondistance
+
+            if (ledgeHitInfo.hit == false) //if our raycast fails we dont get a ledge :(
+            {
+                forceExit = true;
+                return;
+            }
+            
+            //
+            // LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
+            //
+            //
+            // if (lineRenderer == null)
+            // {
+            //     lineRenderer = gameObject.AddComponent<LineRenderer>();
+            // }
+            //
+            // lineRenderer.startWidth = 0.1f;
+            // lineRenderer.endWidth = 0.1f;
+            // lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            // lineRenderer.startColor = Color.red;
+            // lineRenderer.endColor = Color.red;
+            //
+            // // Set the positions of the line
+            // Vector3[] positions = new Vector3[2];
+            // positions[0] = rayCastOrigin;
+            // positions[1] = rayCastOrigin + rayCastDisplacement;
+            //
+            // lineRenderer.positionCount = positions.Length;
+            // lineRenderer.SetPositions(positions);
+
+            Contact wallContact = new Contact(ledgeHitInfo.point, ledgeHitInfo.normal, Vector3.zero, Vector3.zero);
+            
+            
             // Set the size as the default one (CharacterBody component)
             CharacterActor.SetSize(CharacterActor.DefaultBodySize, CharacterActor.SizeReferenceType.Top);
             
             // Look towards the wall
-            CharacterActor.SetYaw(Vector3.ProjectOnPlane(-CharacterActor.WallContact.normal, CharacterActor.Up));
+            CharacterActor.SetYaw(Vector3.ProjectOnPlane(-wallContact.normal, CharacterActor.Up));
+            
+            
 
             Vector3 referencePosition = 0.5f * (leftHitInfo.point + rightHitInfo.point);
-            Vector3 headToReference = referencePosition - CharacterActor.Top;
-            Vector3 correction = Vector3.Project(headToReference, CharacterActor.Up) +
-                verticalOffset * CharacterActor.Up +
-                forwardOffset * CharacterActor.Forward;
-
-            CharacterActor.Position = CharacterActor.Position + correction;
+            Vector3 headToReference = wallContact.point - CharacterActor.Top;
+            Vector3 correction = Vector3.Project(headToReference, CharacterActor.Up) + verticalOffset * CharacterActor.Up  - forwardOffset * CharacterActor.Forward;
+            
+            //move towards the wall
+            CharacterActor.Position = wallContact.point - CharacterActor.Up * verticalOffset - forwardOffset * CharacterActor.Forward;
+            
 
             state = LedgeHangingState.Idle;
 
@@ -376,31 +426,6 @@ namespace Lightbug.CharacterControllerPro.Demo
             );
 
             //print("lh:" + leftHitInfo.hit);
-
-            LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
-
-
-            if (lineRenderer == null)
-            {
-                lineRenderer = gameObject.AddComponent<LineRenderer>();
-            }
-            
-            lineRenderer.startWidth = 0.1f;
-            lineRenderer.endWidth = 0.1f;
-            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-            lineRenderer.startColor = Color.red;
-            lineRenderer.endColor = Color.red;
-
-            // Set the positions of the line
-            Vector3[] positions = new Vector3[2];
-            positions[0] = leftOrigin;
-            positions[1] = leftOrigin + -CharacterActor.Up * ledgeDetectionDistance; // End point
-
-            lineRenderer.positionCount = positions.Length;
-            lineRenderer.SetPositions(positions);
-            
-            
-            
 
             //right raycast
             CharacterActor.PhysicsComponent.Raycast(

@@ -602,17 +602,15 @@ namespace Lightbug.CharacterControllerPro.Demo
                         // Compute the dot product with the player's right vector
                         float dotProduct = Vector3.Dot(CharacterActor.Right, directionToPoint);
                         
-                        Quaternion rotation = Quaternion.identity;;
+                        Quaternion rotation = Quaternion.identity;
                         // Determine the side based on the sign of the dot product
                         if (dotProduct > 0)
                         {
-                            print("right");
                             rotation = Quaternion.AngleAxis(verticalMovementParameters.ungroundedJumpAngleModifier, CharacterActor.Up);
 
                         }
                         else if (dotProduct < 0)
                         {
-                            print("left");
                             rotation = Quaternion.AngleAxis(-verticalMovementParameters.ungroundedJumpAngleModifier, CharacterActor.Up);
 
                         }

@@ -7,6 +7,7 @@ using Lightbug.Utilities;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.VFX;
+using Haipeng.Ghost_trail;
 
 namespace TOMBSATYR
 {
@@ -32,18 +33,18 @@ namespace TOMBSATYR
         public float CheckpointSearchRadius = 90f;
         public float SendFairyAngle = 25.0f;
         public float CheckpointTravelAngle = 10f;
-        public float GhostDuration = .25f;
         
         [SerializeField, ReadOnly] private Checkpoint CurrentCheckpoint;
         [SerializeField, ReadOnly] private Resetpoint CurrentResetpoint;
         private Transform LastGrounded;
-
+        public Ghost GhostFX;
         
 
 
         // Start is called before the first frame update
         void Start()
         {
+            GhostFX = gameObject.AddComponent<Ghost>();
             ScreenFader = FindObjectOfType<Respawner>();
             Health = HEALTH_MAX;
             Stamina = STAMINA_MAX;
@@ -61,8 +62,7 @@ namespace TOMBSATYR
                 FindTorchSendFairy();
             }
         }
-
-
+        
         public float GetNormalizedStamina()
         {
             return Stamina / STAMINA_MAX;
