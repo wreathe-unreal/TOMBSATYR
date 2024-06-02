@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.VFX;
 using Haipeng.Ghost_trail;
+using UnityEditor;
 
 namespace TOMBSATYR
 {

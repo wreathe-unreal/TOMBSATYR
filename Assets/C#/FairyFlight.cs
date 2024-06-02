@@ -43,7 +43,7 @@ namespace TOMBSATYR
             PhysicsBody.useGravity = false; // Disable gravity if you don't want the objects to fall
             PhysicsBody.constraints = RigidbodyConstraints.FreezeRotationX; // Prevent rotation
 
-            SetOrigin(FindObjectOfType<CharacterActor>().transform);
+            SetOrigin(FindObjectOfType<CharacterActor>().gameObject.FindChildWithTag("Fairy Orbit").transform);
 
             RandomFreq = 1.0f / RandomFreq;
 
