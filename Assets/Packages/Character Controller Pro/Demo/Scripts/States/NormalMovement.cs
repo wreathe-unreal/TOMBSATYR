@@ -49,6 +49,11 @@ namespace Lightbug.CharacterControllerPro.Demo
         [SerializeField]
         protected string wallRunParameter = "WallRun";
 
+        [SerializeField] 
+        protected string wallRunDirection;
+        
+        
+
 
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -144,9 +149,31 @@ namespace Lightbug.CharacterControllerPro.Demo
         }
 
 
-        public void SetWallRunning(bool bIsCurrentlyWallRunning)
+        public void SetWallRunning(Contact wallContact)
         {
-            this.bIsWallRunning = bIsCurrentlyWallRunning;
+            
+            if (!bIsWallRunning && wallContact.gameObject != null)
+            {
+                bIsWallRunning = true;
+                
+                // Determine if the wall is on the left or right side of the character
+                float dotProduct = Vector3.Dot(transform.right, wallContact.normal);
+                
+                if (dotProduct < 0)
+                {
+                    wallRunDirection = "RightWallRun";
+                }
+                if(dotProduct >= 0)
+                {
+                    wallRunDirection = "LeftWallRun";
+                }
+            }
+
+            if (wallContact.gameObject == null)
+            {
+                bIsWallRunning = false;
+                wallRunDirection = "";
+            }
         }
 
         public bool IsWallRunning()
@@ -791,6 +818,11 @@ namespace Lightbug.CharacterControllerPro.Demo
                 return;
 
             CharacterStateController.Animator.SetBool(wallRunParameter, IsWallRunning());
+            if (wallRunDirection != "")
+            {
+                print(wallRunDirection);
+                CharacterStateController.Animator.SetTrigger(wallRunDirection);
+            }
             CharacterStateController.Animator.SetBool(groundedParameter, CharacterActor.IsGrounded);
             CharacterStateController.Animator.SetBool(stableParameter, CharacterActor.IsStable);
             CharacterStateController.Animator.SetFloat(horizontalAxisParameter, CharacterActions.movement.value.x);

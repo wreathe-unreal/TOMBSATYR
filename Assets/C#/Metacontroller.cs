@@ -61,6 +61,7 @@ namespace TOMBSATYR
             Controller.OnGroundedStateEnter += ResetJumpApex;
             Controller.OnGroundedStateEnter += SpawnPlume;
             Controller.OnGroundedStateEnter += DisableGhost;
+            Controller.OnGroundedStateEnter += ResetConsumedStamina;
             //Controller.OnGroundedStateExit += DebugMatrixMode;
             //Controller.OnGroundedStateEnter += DebugMatrixModeOff;
 
@@ -78,19 +79,52 @@ namespace TOMBSATYR
             //Controller.OnGroundedStateExit += FindNearestResetpoint;
         }
 
-        
+        private void ResetConsumedStamina(Vector3 obj)
+        {
+            PlayerRef.StaminaConsumed = 0f;
+        }
+
 
         void Update()
         {
             FrameFallVelocity = Controller.Velocity.y;
+            UpdateStaminaState();
             FrameMovementOverrides();
+        }
+
+        private void UpdateStaminaState()
+        {
+            if (CharacterMovement.IsWallRunning())
+            {
+                PlayerRef.StaminaState = EStaminaState.WallRun;
+            }
+            else if(Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity != Vector3.zero && !Input.GetButton("Crouch"))
+            {
+                PlayerRef.StaminaState = EStaminaState.Sprint;
+            }
+            
+            else if(Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity == Vector3.zero && Input.GetButton("Crouch"))
+            {
+                PlayerRef.StaminaState = EStaminaState.HighJump;
+            }
+            else
+            {
+                PlayerRef.StaminaState = EStaminaState.Idle;
+            }
         }
 
 
         private void CheckWallRun(Contact contact)
         {
+            //various filters we check and return if they are not met
             float angle = Vector3.Angle(-contact.normal, Controller.Forward);
             print(angle);
+
+            if (contact.gameObject.layer != 0) //if not default
+            {
+                print("not default layer");
+                return;
+            }
             
             if (!Input.GetButton("Run"))
             {
@@ -104,9 +138,9 @@ namespace TOMBSATYR
                 return;
             }
             
-            if (Vector3.Dot(Vector3.Project(Controller.Velocity, Controller.Forward), Controller.Forward) < .4f)
+            if (Vector3.Dot(Vector3.Project(Controller.Velocity.normalized, Controller.Forward), Controller.Forward) < .6f)
             {
-                print("velocity not forward");
+                print("velocity not mostly forward");
                 return;
             }
 
@@ -116,58 +150,45 @@ namespace TOMBSATYR
                 return;
             }
 
-            if (angle < 50f || angle > 80f)
+            if (angle <= 45f || angle >= 90f)
             {
                 print("wall angle bad");
                 return;
             }
-
-            CharacterMovement.SetWallRunning(true);
+            
+            //by setting an initialized contact we tell the method we made on the controller that we have a valid wall run
+            //we have to pass a contact so that it can access the normal on the wall to find the wall direction for animating purposes
+            CharacterMovement.SetWallRunning(InitialWallRunContact); 
             InitialWallRunContact = contact;
 
-            
-            // // Determine if the wall is on the left or right side of the character
-            // float dotProduct = Vector3.Dot(transform.right, InitialWallRunContact.normal);
-            //
-            // if (dotProduct > 0)
-            // {
-            //     // Wall is on the right
-            //     CharacterMovement.SetWallRunSide(true);
-            // }
-            // else
-            // {
-            //     // Wall is on the left
-            //     CharacterMovement.SetWallRunSide(false);
-            // }
             
         }
         
         private void HandleHighJump(bool b)
         {
-            if (Input.GetButton("Run")  && Input.GetButton("Crouch"))
+            if(!Input.GetButton("Run")  || !Input.GetButton("Crouch"))
             {
-                if (PlayerRef.GetConsumedStamina() > 2.0f)
-                {
-                    float consumedStamina = PlayerRef.GetConsumedStamina();
-                    float staminaRatio = consumedStamina / Player.STAMINA_MAX;
-
-                    CharacterMovement.verticalMovementParameters.jumpApexDuration += staminaRatio * HighJumpApexDurationMod;
-                    CharacterMovement.verticalMovementParameters.jumpSpeed += staminaRatio * HighJumpSpeedModifier;
-                    
-                    CharacterMovement.ReduceAirControl(1f);
-
-                    if (PlayerRef.GetConsumedStamina() > 10f)
-                    {
-                        PlayerRef.GhostFX.SetActive(.75f);
-                    }
-                    
-                    CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
-                    PlayerRef.ResetConsumedStamina();
-                    
-                }
-
+                return;
             }
+
+            if (PlayerRef.GetConsumedStamina() <= 2.0f)
+            {
+                return;
+            }
+            
+            CharacterMovement.verticalMovementParameters.jumpApexDuration += PlayerRef.GetConsumedStaminaRatio() * HighJumpApexDurationMod;
+            CharacterMovement.verticalMovementParameters.jumpSpeed += PlayerRef.GetConsumedStaminaRatio() * HighJumpSpeedModifier;
+            
+            CharacterMovement.ReduceAirControl(1f);
+
+            if (PlayerRef.GetConsumedStamina() > 10f)
+            {
+                PlayerRef.GhostFX.SetActive(.75f);
+            }
+            
+            CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
         }
+        
         private void DisableGhost(Vector3 obj)
         {
             PlayerRef.GhostFX.SetInactive();
@@ -228,33 +249,32 @@ namespace TOMBSATYR
 
         private void HandleWallRunning()
         {
-            if (CharacterMovement.IsWallRunning())
+            if (!CharacterMovement.IsWallRunning())
             {
-                print(PlayerRef.GetNormalizedStamina());
-                print("stamina:" + Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f));
-                if(!Input.GetButton("Run") || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f))
-                {
-                    print("done wall running");
-                    CharacterMovement.SetWallRunning(false);
-                    CharacterMovement.UseGravity = true;
-                    CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
-                    return;
-                }
-                
-                print("wallrun");
-                PlayerRef.DrainStamina();
-                CharacterMovement.UseGravity = false;
-                CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
-                Vector3 wallRunDirection = Vector3.Cross(InitialWallRunContact.normal, Vector3.up).normalized;
-
-                //fix cross product finding the backwards direction axis and set it forwards
-                if (Vector3.Dot(Controller.Forward, wallRunDirection) < 0)
-                {
-                    wallRunDirection = -wallRunDirection;
-                }
-                
-                Controller.Velocity = wallRunDirection * Controller.Velocity.magnitude;
+                return;
             }
+            
+            //wall run exit condition
+            if(!Input.GetButton("Run") || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f))
+            {
+                CharacterMovement.SetWallRunning(new Contact());
+                CharacterMovement.UseGravity = true;
+                CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
+                return;
+            }
+            
+            CharacterMovement.UseGravity = false;
+            CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+            
+            Vector3 wallRunDirection = Vector3.Cross(InitialWallRunContact.normal, Vector3.up).normalized;
+
+            //fix cross product sometimes finding the backwards direction axis and set it forwards
+            if (Vector3.Dot(Controller.Forward, wallRunDirection) < 0)
+            {
+                wallRunDirection = -wallRunDirection;
+            }
+            
+            Controller.Velocity = wallRunDirection * Controller.Velocity.magnitude;
         }
 
         private void HandleCrouching()
@@ -264,8 +284,6 @@ namespace TOMBSATYR
         
         private void HandleRunning()
         {
-            //print(Controller.StableVelocity.magnitude);
-            
             if (CharacterMovement.IsRunning() && !CharacterMovement.IsWallRunning())
             {
                 if (!Mathf.Approximately(Controller.slopeLimit, DefaultSlopeLimit))
@@ -290,7 +308,6 @@ namespace TOMBSATYR
 
         private void AddUngroundedJump(Contact obj)
         {
-            print("wall hit");
             if (Controller.IsGrounded || Controller.IsOnUnstableGround)
             {
                 return;
@@ -314,26 +331,30 @@ namespace TOMBSATYR
 
         private void HandleLongJump(bool obj)
         {
-            if (Input.GetButton("Run"))
+            if (!Input.GetButton("Run"))
             {
-                if (PlayerRef.GetConsumedStamina() > 2.0f)
-                {
-                    float consumedStamina = PlayerRef.GetConsumedStamina();
-                    float staminaRatio = consumedStamina / Player.STAMINA_MAX;
-                    float forceMagnitude = LongJumpForce * staminaRatio * Vector3.Dot(Controller.Velocity, Controller.Forward);
-                    PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude, true, true);
-
-                    if (PlayerRef.GetConsumedStamina() > 10f)
-                    {
-                        PlayerRef.GhostFX.SetActive(.75f);
-                    }
-                    
-                    CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
-                    PlayerRef.ResetConsumedStamina();
-                    
-                }
-
+                return;
             }
+
+            if (PlayerRef.GetConsumedStamina() <= 2.0f)
+            {
+                print(PlayerRef.GetConsumedStaminaRatio());
+                print(PlayerRef.GetConsumedStamina());
+                return;
+            }
+
+            print(PlayerRef.GetConsumedStaminaRatio());
+            print(PlayerRef.GetConsumedStamina());
+            
+            float forceMagnitude = LongJumpForce * PlayerRef.GetConsumedStaminaRatio() * Vector3.Dot(Controller.Velocity, Controller.Forward);
+            PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude, true, true);
+            
+            if (PlayerRef.GetConsumedStamina() > 10f)
+            {
+                PlayerRef.GhostFX.SetActive(.75f);
+                CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+            }
+            
         }
         
         

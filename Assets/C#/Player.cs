@@ -10,6 +10,16 @@ using UnityEngine.VFX;
 using Haipeng.Ghost_trail;
 using UnityEditor;
 
+
+public enum EStaminaState
+{
+    Idle,
+    Sprint,
+    WallRun,
+    HighJump,
+    
+}
+
 namespace TOMBSATYR
 {
 
@@ -26,14 +36,18 @@ namespace TOMBSATYR
         [SerializeField, ReadOnly] private float Stamina;
         public const int STAMINA_MAX = 20;
         public const int STAMINA_MIN = 0;
-        public float StaminaDrain = 20;
+        public float WallRunStaminaDrain = .2f;
+        public float HighJumpStaminaDrain = 30f;
+        public float SprintStaminaDrain = 15f;
         public float StaminaRegen = 8;
-        private float StaminaConsumed = 0f;
+        public float StaminaConsumed = 0f;
         
         public float TorchSearchRadius = 45f;
         public float CheckpointSearchRadius = 90f;
         public float SendFairyAngle = 25.0f;
         public float CheckpointTravelAngle = 10f;
+
+        public EStaminaState StaminaState = EStaminaState.Idle;
         
         [SerializeField, ReadOnly] private Checkpoint CurrentCheckpoint;
         [SerializeField, ReadOnly] private Resetpoint CurrentResetpoint;
@@ -51,7 +65,7 @@ namespace TOMBSATYR
         }
 
 
-
+        
         void Update()
         {
             UpdateStamina();
@@ -68,52 +82,70 @@ namespace TOMBSATYR
             return Stamina / STAMINA_MAX;
         }
 
+        public float GetConsumedStaminaRatio()
+        {
+            return StaminaConsumed / STAMINA_MAX;
+        }
         public float GetConsumedStamina()
         {
             return StaminaConsumed;
         }
 
-        public void ResetConsumedStamina()
-        {
-            StaminaConsumed = 0f + Metacontroller.EPSILON_PRECISE;
-        }
-
         //drains one frame of stamina
         public void DrainStamina()
         {
-            Stamina -= Time.deltaTime * 0.5f * StaminaDrain;
+            Stamina -= Time.deltaTime * 0.1f * WallRunStaminaDrain;
             Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
         }
-        
+
         private void UpdateStamina()
         {
+            float modifier = 0f;
             
-            if(Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity != Vector3.zero && !Input.GetButton("Crouch"))
+            switch (StaminaState)
             {
-                if (Stamina > STAMINA_MIN)
-                {
-                    Stamina -= Time.deltaTime * StaminaDrain;
-                    StaminaConsumed += Time.deltaTime * StaminaDrain;
-                    Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
-                }
+                case EStaminaState.Idle:
+                    if (Controller.IsGrounded)
+                    {
+                        modifier = StaminaRegen;
+                    }
+                    else
+                    {
+                        modifier = StaminaRegen / 4;
+                    }
+                    break;
+                case EStaminaState.Sprint:
+                    modifier = -SprintStaminaDrain;
+                    break;
+                case EStaminaState.HighJump:
+                    modifier = -HighJumpStaminaDrain;
+                    break;
+                case EStaminaState.WallRun:
+                    modifier = -WallRunStaminaDrain;
+                    break;
             }
-            else if (Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity == Vector3.zero && Input.GetButton("Crouch"))
+            
+            
+            if (StaminaState != EStaminaState.Idle)
             {
-                if (Stamina > STAMINA_MIN)
-                {
-                    Stamina -= Time.deltaTime * StaminaDrain;
-                    StaminaConsumed += Time.deltaTime * StaminaDrain;
-                    Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
-                }
+                StaminaConsumed += Time.deltaTime * Mathf.Abs(modifier);
+                StaminaConsumed = Mathf.Clamp(StaminaConsumed, STAMINA_MIN, STAMINA_MAX);
             }
-            else if (!Input.GetButton("Run") && !Mathf.Approximately(GetNormalizedStamina(), 1f) || (Controller.Velocity == Vector3.zero && Controller.IsGrounded))
+            
+            Stamina += Time.deltaTime * modifier;
+            Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
+
+            
+        }
+
+        public void TryResetConsumedStamina()
+        {
+            
+            if (!Input.GetButton("Run") && !Mathf.Approximately(GetNormalizedStamina(), 1f) 
+                || (Controller.Velocity == Vector3.zero && Controller.IsGrounded && !Input.GetButton("Crouch")) 
+                || StaminaState == EStaminaState.Idle)
             {
-                if (StaminaConsumed != 0)
-                {
-                    StartCoroutine(ResetStaminaConsumedAfterDelay(0.1f)); //essentially coyote time but for stamina consumption for our jumps
-                }
-                Stamina += (Time.deltaTime * StaminaRegen);
-                Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
+                StartCoroutine(ResetStaminaConsumedAfterDelay(0.1f)); //essentially coyote time but for stamina consumption for our j
             }
         }
 
@@ -122,8 +154,7 @@ namespace TOMBSATYR
             // Wait for the specified delay
             yield return new WaitForSeconds(delay);
         
-            // Set StaminaConsumed to 0 + Metacontroller.EPSILON_PRECISE
-            ResetConsumedStamina();
+            StaminaConsumed = 0f;
         }
 
         public void UpdateHealth(int modifier)
@@ -212,6 +243,7 @@ namespace TOMBSATYR
 
             Controller.Teleport(CurrentCheckpoint.GetSpawn().position, CurrentCheckpoint.GetSpawn().rotation);
             Health = HEALTH_MAX;
+            Stamina = STAMINA_MAX;
         }
 
         public void FastTravel(Resetpoint resetpoint)
@@ -230,8 +262,8 @@ namespace TOMBSATYR
                 return obj.bIsActivated && IsNearPlayer(obj.gameObject, CheckpointSearchRadius)
                                         && Camera.main.IsInView(obj.gameObject, CheckpointTravelAngle)
                                         && Camera.main.IsUnobstructed(obj.gameObject)
-                                        && Vector3.Distance(playerPosition, gameObject.transform.position) >
-                                        12f; //and the player is far enough away so they dont accidentally fast travel all the time
+                                        && Vector3.Distance(playerPosition, gameObject.transform.position) > 12f; 
+                                        //and the player is far enough away so they dont accidentally fast travel all the time
 
             });
 
@@ -286,7 +318,8 @@ namespace TOMBSATYR
         public void OnEnterCheckpoint(Checkpoint enteredCheckpoint)
         {
             CurrentCheckpoint = enteredCheckpoint;
-            UpdateHealth(20);
+            Health = HEALTH_MAX;
+            Stamina = STAMINA_MAX;
         }
     }
 }
