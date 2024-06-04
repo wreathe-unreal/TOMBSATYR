@@ -151,6 +151,16 @@ namespace TOMBSATYR
             wantedVel += OriginPush * Time.deltaTime;
             wantedVel += avgVelocity * Time.deltaTime;
             wantedVel += toAvg.normalized * Gravity * Time.deltaTime;
+            
+            // Perform collision avoidance
+            // ******************** BEGIN NEW CODE ********************
+            RaycastHit hit;
+            if (Physics.SphereCast(myPosition, 5.0f, Velocity, out hit, AvoidanceRadius))
+            {
+                Vector3 avoidanceDir = Vector3.Reflect(Velocity, hit.normal);
+                wantedVel += avoidanceDir.normalized * AvoidanceForce;
+            }
+            // ********************* END NEW CODE *********************
 
             Velocity = Vector3.RotateTowards(Velocity, wantedVel, TurnSpeed * Time.deltaTime, 100.00f);
 
