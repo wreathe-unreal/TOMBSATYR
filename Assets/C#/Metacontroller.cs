@@ -18,9 +18,11 @@ namespace TOMBSATYR
         private CharacterBody PhysicsBody;
         private Camera PlayerCamera;
 
+        public float HighJumpSpeedModifier = 10f;
+        public float HighJumpApexDurationMod = .025f;
         public float LongJumpForce = 17f;
         public int RunningSlopeAngleModifier = 5;
-        public float JumpApexDurationModifier = .025f;
+        public float WallJumpApexDurationModifier = .025f;
 
         public float RunningFOV = 65f;
         
@@ -35,6 +37,9 @@ namespace TOMBSATYR
         private float DefaultJumpApexDuration;
 
         private float FrameFallVelocity = 0f;
+
+        private float DefaultJumpApex;
+        private float DefaultJumpSpeed;
 
         
 
@@ -57,7 +62,8 @@ namespace TOMBSATYR
             Controller.OnGroundedStateEnter += DisableGhost;
             //Controller.OnGroundedStateExit += DebugMatrixMode;
             //Controller.OnGroundedStateEnter += DebugMatrixModeOff;
-            
+
+            CharacterMovement.OnGroundedJumpPerformed += HandleHighJump;
             CharacterMovement.OnGroundedJumpPerformed += HandleLongJump;
             CharacterMovement.OnNotGroundedJumpPerformed += HandleUngroundedJump;
             CharacterMovement.OnNotGroundedJumpPerformed += ModifyJumpApex;
@@ -65,10 +71,47 @@ namespace TOMBSATYR
             DefaultSlopeLimit = Controller.slopeLimit;
             DefaultFOV = PlayerCamera.fieldOfView;
             DefaultJumpApexDuration = CharacterMovement.verticalMovementParameters.jumpApexDuration;
+            DefaultJumpApex = CharacterMovement.verticalMovementParameters.jumpApexHeight;
+            DefaultJumpSpeed = CharacterMovement.verticalMovementParameters.jumpSpeed;
 
             //Controller.OnGroundedStateExit += FindNearestResetpoint;
         }
 
+        
+
+        void Update()
+        {
+            FrameFallVelocity = Controller.Velocity.y;
+            FrameMovementOverrides();
+
+        }
+
+        private void HandleHighJump(bool b)
+        {
+            if (Input.GetButton("Run")  && Input.GetButton("Crouch"))
+            {
+                if (PlayerRef.GetConsumedStamina() > 2.0f)
+                {
+                    float consumedStamina = PlayerRef.GetConsumedStamina();
+                    float staminaRatio = consumedStamina / Player.STAMINA_MAX;
+
+                    CharacterMovement.verticalMovementParameters.jumpApexDuration += staminaRatio * HighJumpApexDurationMod;
+                    CharacterMovement.verticalMovementParameters.jumpSpeed += staminaRatio * HighJumpSpeedModifier;
+                    
+                    CharacterMovement.ReduceAirControl(1f);
+
+                    if (PlayerRef.GetConsumedStamina() > 10f)
+                    {
+                        PlayerRef.GhostFX.SetActive(.75f);
+                    }
+                    
+                    CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+                    PlayerRef.ResetConsumedStamina();
+                    
+                }
+
+            }
+        }
         private void DisableGhost(Vector3 obj)
         {
             PlayerRef.GhostFX.SetInactive();
@@ -76,7 +119,10 @@ namespace TOMBSATYR
 
         private void SpawnPlume(Vector3 obj)
         {
-            
+            if (Controller.Velocity.y > 15f)
+            {
+                //spawn plume
+            }
         }
         
         private void DebugMatrixMode()
@@ -92,6 +138,7 @@ namespace TOMBSATYR
         private void ResetJumpApex(Vector3 obj)
         {
             CharacterMovement.verticalMovementParameters.jumpApexDuration = DefaultJumpApexDuration;
+            CharacterMovement.verticalMovementParameters.jumpApexHeight = DefaultJumpApex;
         }
 
         private void ModifyJumpApex(int obj)
@@ -99,7 +146,7 @@ namespace TOMBSATYR
 
             if (Mathf.Approximately(CharacterMovement.verticalMovementParameters.jumpApexDuration, DefaultJumpApexDuration))
             {
-                CharacterMovement.verticalMovementParameters.jumpApexDuration += JumpApexDurationModifier;
+                CharacterMovement.verticalMovementParameters.jumpApexDuration += WallJumpApexDurationModifier;
             }
         }
 
@@ -108,21 +155,20 @@ namespace TOMBSATYR
             PlayerRef.GhostFX.SetActive(.2f);
             UngroundedJumpsPerformed++;
         }
-
-        void Update()
-        {
-            FrameFallVelocity = Controller.Velocity.y;
-            FrameMovementOverrides();
-
-        }
         
         private void FrameMovementOverrides()
         {
             CharacterMovement.planarMovementParameters.canRun = PlayerRef.GetNormalizedStamina() > 0;
 
             HandleRunning();
+            HandleCrouching();
         }
 
+        private void HandleCrouching()
+        {
+            
+        }
+        
         private void HandleRunning()
         {
             //print(Controller.StableVelocity.magnitude);
@@ -182,7 +228,7 @@ namespace TOMBSATYR
                     float consumedStamina = PlayerRef.GetConsumedStamina();
                     float staminaRatio = consumedStamina / Player.STAMINA_MAX;
                     float forceMagnitude = LongJumpForce * staminaRatio * Vector3.Dot(Controller.Velocity, Controller.Forward);
-                    PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude);
+                    PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude, true, true);
 
                     if (PlayerRef.GetConsumedStamina() > 10f)
                     {

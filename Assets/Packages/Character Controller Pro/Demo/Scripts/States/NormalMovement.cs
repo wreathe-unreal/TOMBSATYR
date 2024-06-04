@@ -408,7 +408,7 @@ namespace Lightbug.CharacterControllerPro.Demo
                 return jumpResult;
 
             if (isCrouched)
-                return jumpResult;
+                return JumpResult.Grounded;
 
 
             switch (CharacterActor.CurrentState)
@@ -450,6 +450,12 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         protected virtual void ProcessJump(float dt)
         {
+            // Prevent jump when crouch is active if the jump is not pressed
+            if (CharacterActions.crouch.value && !CharacterActions.jump.value)
+            {
+                return;
+            }
+
             ProcessRegularJump(dt);
             ProcessJumpDown(dt);
         }

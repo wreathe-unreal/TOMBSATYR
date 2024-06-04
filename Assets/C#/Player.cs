@@ -82,7 +82,16 @@ namespace TOMBSATYR
         private void UpdateStamina()
         {
             
-            if (Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity != Vector3.zero)
+            if(Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity != Vector3.zero && !Input.GetButton("Crouch"))
+            {
+                if (Stamina > STAMINA_MIN)
+                {
+                    Stamina -= Time.deltaTime * StaminaDrain;
+                    StaminaConsumed += Time.deltaTime * StaminaDrain;
+                    Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
+                }
+            }
+            else if (Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity == Vector3.zero && Input.GetButton("Crouch"))
             {
                 if (Stamina > STAMINA_MIN)
                 {
@@ -95,7 +104,7 @@ namespace TOMBSATYR
             {
                 if (StaminaConsumed != 0)
                 {
-                    StartCoroutine(ResetStaminaConsumedAfterDelay(0.2f)); //essentially coyote time but for stamina consumption for our jumps
+                    StartCoroutine(ResetStaminaConsumedAfterDelay(0.1f)); //essentially coyote time but for stamina consumption for our jumps
                 }
                 Stamina += (Time.deltaTime * StaminaRegen);
                 Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
