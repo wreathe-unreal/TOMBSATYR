@@ -144,6 +144,9 @@ namespace Lightbug.CharacterControllerPro.Demo
         [Space(10f)]
 
         public bool canJumpOnUnstableGround = false;
+        
+        
+
 
 
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────

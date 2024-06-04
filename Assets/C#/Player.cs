@@ -37,7 +37,6 @@ namespace TOMBSATYR
         
         [SerializeField, ReadOnly] private Checkpoint CurrentCheckpoint;
         [SerializeField, ReadOnly] private Resetpoint CurrentResetpoint;
-        private Transform LastGrounded;
         public Ghost GhostFX;
         
 
@@ -77,6 +76,13 @@ namespace TOMBSATYR
         public void ResetConsumedStamina()
         {
             StaminaConsumed = 0f + Metacontroller.EPSILON_PRECISE;
+        }
+
+        //drains one frame of stamina
+        public void DrainStamina()
+        {
+            Stamina -= Time.deltaTime * 0.5f * StaminaDrain;
+            Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
         }
         
         private void UpdateStamina()

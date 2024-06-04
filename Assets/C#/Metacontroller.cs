@@ -40,6 +40,7 @@ namespace TOMBSATYR
 
         private float DefaultJumpApex;
         private float DefaultJumpSpeed;
+        private Contact InitialWallRunContact;
 
         
 
@@ -53,7 +54,7 @@ namespace TOMBSATYR
             CharacterMovement = transform.Find("Controller/States").GetComponent<NormalMovement>();
 
             Controller.OnWallHit += AddUngroundedJump; //walljump
-            
+            Controller.OnWallHit += CheckWallRun;
             Controller.OnGroundedStateEnter += ResetUngroundedJumps;
             Controller.OnGroundedStateEnter += CalculateFallDamage;
             Controller.OnGroundedStateEnter += ResetLookDirectionParams;
@@ -83,9 +84,64 @@ namespace TOMBSATYR
         {
             FrameFallVelocity = Controller.Velocity.y;
             FrameMovementOverrides();
-
         }
 
+
+        private void CheckWallRun(Contact contact)
+        {
+            float angle = Vector3.Angle(-contact.normal, Controller.Forward);
+            print(angle);
+            
+            if (!Input.GetButton("Run"))
+            {
+                print("no sprint");
+                return;
+            }
+
+            if (!Controller.IsAscending)
+            {
+                print("no ascension");
+                return;
+            }
+            
+            if (Vector3.Dot(Vector3.Project(Controller.Velocity, Controller.Forward), Controller.Forward) < .4f)
+            {
+                print("velocity not forward");
+                return;
+            }
+
+            if (Controller.Velocity.magnitude < 5f)
+            {
+                print("velocity not high enough");
+                return;
+            }
+
+            if (angle < 50f || angle > 80f)
+            {
+                print("wall angle bad");
+                return;
+            }
+
+            CharacterMovement.SetWallRunning(true);
+            InitialWallRunContact = contact;
+
+            
+            // // Determine if the wall is on the left or right side of the character
+            // float dotProduct = Vector3.Dot(transform.right, InitialWallRunContact.normal);
+            //
+            // if (dotProduct > 0)
+            // {
+            //     // Wall is on the right
+            //     CharacterMovement.SetWallRunSide(true);
+            // }
+            // else
+            // {
+            //     // Wall is on the left
+            //     CharacterMovement.SetWallRunSide(false);
+            // }
+            
+        }
+        
         private void HandleHighJump(bool b)
         {
             if (Input.GetButton("Run")  && Input.GetButton("Crouch"))
@@ -158,10 +214,47 @@ namespace TOMBSATYR
         
         private void FrameMovementOverrides()
         {
-            CharacterMovement.planarMovementParameters.canRun = PlayerRef.GetNormalizedStamina() > 0;
-
+            SetOverrides();
             HandleRunning();
             HandleCrouching();
+            HandleWallRunning();
+        }
+
+        private void SetOverrides()
+        {
+            CharacterMovement.planarMovementParameters.canRun = PlayerRef.GetNormalizedStamina() > 0;
+
+        }
+
+        private void HandleWallRunning()
+        {
+            if (CharacterMovement.IsWallRunning())
+            {
+                print(PlayerRef.GetNormalizedStamina());
+                print("stamina:" + Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f));
+                if(!Input.GetButton("Run") || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f))
+                {
+                    print("done wall running");
+                    CharacterMovement.SetWallRunning(false);
+                    CharacterMovement.UseGravity = true;
+                    CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
+                    return;
+                }
+                
+                print("wallrun");
+                PlayerRef.DrainStamina();
+                CharacterMovement.UseGravity = false;
+                CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+                Vector3 wallRunDirection = Vector3.Cross(InitialWallRunContact.normal, Vector3.up).normalized;
+
+                //fix cross product finding the backwards direction axis and set it forwards
+                if (Vector3.Dot(Controller.Forward, wallRunDirection) < 0)
+                {
+                    wallRunDirection = -wallRunDirection;
+                }
+                
+                Controller.Velocity = wallRunDirection * Controller.Velocity.magnitude;
+            }
         }
 
         private void HandleCrouching()
@@ -173,7 +266,7 @@ namespace TOMBSATYR
         {
             //print(Controller.StableVelocity.magnitude);
             
-            if (CharacterMovement.IsRunning())
+            if (CharacterMovement.IsRunning() && !CharacterMovement.IsWallRunning())
             {
                 if (!Mathf.Approximately(Controller.slopeLimit, DefaultSlopeLimit))
                 {

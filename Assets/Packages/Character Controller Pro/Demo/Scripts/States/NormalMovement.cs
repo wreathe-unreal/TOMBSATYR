@@ -46,6 +46,9 @@ namespace Lightbug.CharacterControllerPro.Demo
         [SerializeField]
         protected string heightParameter = "Height";
 
+        [SerializeField]
+        protected string wallRunParameter = "WallRun";
+
 
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -95,6 +98,8 @@ namespace Lightbug.CharacterControllerPro.Demo
         float reducedAirControlInitialTime = 0f;
         float reductionDuration = 0.5f;
 
+        private bool bIsWallRunning = false;
+
         protected override void Awake()
         {
             base.Awake();
@@ -112,6 +117,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         protected override void Start()
         {
             base.Start();
+            
             
             targetHeight = CharacterActor.DefaultBodySize.y;
 
@@ -136,8 +142,17 @@ namespace Lightbug.CharacterControllerPro.Demo
             "react to the different material properties, etc. Basically it covers all the common movements involved " +
             "in a typical game, from a 3D platformer to a first person walking simulator.";
         }
-        
-        
+
+
+        public void SetWallRunning(bool bIsCurrentlyWallRunning)
+        {
+            this.bIsWallRunning = bIsCurrentlyWallRunning;
+        }
+
+        public bool IsWallRunning()
+        {
+            return this.bIsWallRunning;
+        }
 
         public bool IsRunning()
         {
@@ -775,6 +790,7 @@ namespace Lightbug.CharacterControllerPro.Demo
             if (!CharacterActor.IsAnimatorValid())
                 return;
 
+            CharacterStateController.Animator.SetBool(wallRunParameter, IsWallRunning());
             CharacterStateController.Animator.SetBool(groundedParameter, CharacterActor.IsGrounded);
             CharacterStateController.Animator.SetBool(stableParameter, CharacterActor.IsStable);
             CharacterStateController.Animator.SetFloat(horizontalAxisParameter, CharacterActions.movement.value.x);

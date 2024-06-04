@@ -24,10 +24,12 @@ namespace Haipeng.Ghost_trail
         [Range(0, 2)]
         public float TimeTrailShow;
 
+        [Header("Scale of the trail")]
+        public float Scale = 1.0f;
+
         private List<DrawingMesh> DrawingMeshes = new List<DrawingMesh>();
 
         private Coroutine Coro;
-
 
         void LateUpdate()
         {
@@ -35,14 +37,15 @@ namespace Haipeng.Ghost_trail
 
             foreach (var drawing_mesh in this.DrawingMeshes)
             {
-            
-                Graphics.DrawMesh(drawing_mesh.mesh, Matrix4x4.identity, drawing_mesh.material, gameObject.layer, Camera.main, 0, null, drawing_mesh.shadowCastingMode, false, null);
+                Matrix4x4 objectMatrix = transform.localToWorldMatrix;
+                Matrix4x4 scaleMatrix = Matrix4x4.Scale(Vector3.one * Scale);
+                Matrix4x4 finalMatrix = objectMatrix * scaleMatrix;
+
+                Graphics.DrawMesh(drawing_mesh.mesh, finalMatrix, drawing_mesh.material, gameObject.layer, Camera.main, 0, null, drawing_mesh.shadowCastingMode, false, null);
                 drawing_mesh.left_time -= Time.deltaTime;
-                
 
                 if (drawing_mesh.material.HasProperty("_BaseColor"))
                 {
-                    //Color c = Color.white;
                     Color newColor = drawing_mesh.material.color;
                     newColor.a = Mathf.Max(0, drawing_mesh.left_time / this.TimeTrailShow * 0.5f);
 
@@ -50,7 +53,6 @@ namespace Haipeng.Ghost_trail
                 }
                 else if (drawing_mesh.material.HasProperty("_Color"))
                 {
-                    //Color c = Color.white;
                     Color newColor = drawing_mesh.material.color;
                     newColor.a = Mathf.Max(0, drawing_mesh.left_time / this.TimeTrailShow * 0.5f);
 
@@ -135,11 +137,8 @@ namespace Haipeng.Ghost_trail
             DrawingMesh drawing_mesh = new DrawingMesh()
             {
                 mesh = this.combine_all_mesh(),
-       
                 material = new Material(this.M_Trail),
-
                 left_time = this.TimeTrailShow,
-                
                 shadowCastingMode = ShadowCastingMode.Off
             };
 
