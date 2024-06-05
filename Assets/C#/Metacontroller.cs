@@ -1,11 +1,13 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using Lightbug.CharacterControllerPro.Core;
 using Lightbug.CharacterControllerPro.Demo;
 using Lightbug.Utilities;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
+using Vector3 = UnityEngine.Vector3;
 
 namespace TOMBSATYR
 {
@@ -23,6 +25,7 @@ namespace TOMBSATYR
         public float LongJumpForce = 17f;
         public int RunningSlopeAngleModifier = 5;
         public float WallJumpApexDurationModifier = .025f;
+        public float WallRunGravity = 0.5f;
 
         public float RunningFOV = 65f;
         
@@ -41,6 +44,9 @@ namespace TOMBSATYR
         private float DefaultJumpApex;
         private float DefaultJumpSpeed;
         private Contact InitialWallRunContact;
+        
+        
+        private LineRenderer LineRenderer;
 
         
 
@@ -118,7 +124,6 @@ namespace TOMBSATYR
         {
             //various filters we check and return if they are not met
             float angle = Vector3.Angle(-contact.normal, Controller.Forward);
-            print(angle);
 
             if (contact.gameObject.layer != 0) //if not default
             {
@@ -132,17 +137,17 @@ namespace TOMBSATYR
                 return;
             }
 
-            if (!Controller.IsAscending)
+            if (!Controller.IsAscending && Controller.IsGrounded == false)
             {
                 print("no ascension");
                 return;
             }
             
-            if (Vector3.Dot(Vector3.Project(Controller.Velocity.normalized, Controller.Forward), Controller.Forward) < .6f)
-            {
-                print("velocity not mostly forward");
-                return;
-            }
+            // if (Vector3.Dot(Vector3.Project(Controller.Velocity.normalized, Controller.Forward), Controller.Forward) < .6f)
+            // {
+            //     print("velocity not mostly forward");
+            //     return;
+            // }
 
             if (Controller.Velocity.magnitude < 5f)
             {
@@ -158,8 +163,9 @@ namespace TOMBSATYR
             
             //by setting an initialized contact we tell the method we made on the controller that we have a valid wall run
             //we have to pass a contact so that it can access the normal on the wall to find the wall direction for animating purposes
-            CharacterMovement.SetWallRunning(InitialWallRunContact); 
+            CharacterMovement.TryWallRunning(InitialWallRunContact); 
             InitialWallRunContact = contact;
+            
 
             
         }
@@ -253,28 +259,81 @@ namespace TOMBSATYR
             {
                 return;
             }
-            
-            //wall run exit condition
-            if(!Input.GetButton("Run") || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f))
+
+            Vector3 wallSide = Vector3.zero;
+
+            float dotProduct = Vector3.Dot(Controller.Right, InitialWallRunContact.normal);
+
+            if (dotProduct < 0)
             {
-                CharacterMovement.SetWallRunning(new Contact());
-                CharacterMovement.UseGravity = true;
-                CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
+                wallSide = Controller.Right;
+            }
+
+            if (dotProduct >= 0)
+            {
+                wallSide = -Controller.Right;
+            }
+
+            LayerMask layerMask = LayerMask.GetMask("Default");
+            HitInfo footRaycast = new HitInfo();
+            HitInfo centerRaycast = new HitInfo();
+            Vector3 centerDetection = Controller.Center;
+            Vector3 footDetection = Controller.Bottom;
+            Vector3 wallOffset = wallSide * 5f;
+            HitInfoFilter ledgeHitInfoFilter = new HitInfoFilter(layerMask, false, true);
+
+            Controller.PhysicsComponent.Raycast(
+                out footRaycast,
+                centerDetection,
+                wallOffset,
+                in ledgeHitInfoFilter);
+
+            Controller.PhysicsComponent.Raycast(
+                out centerRaycast,
+                footDetection,
+                wallOffset,
+                in ledgeHitInfoFilter);
+            
+            //
+            // LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
+            //
+            //
+            // if (lineRenderer == null)
+            // {
+            //     lineRenderer = gameObject.AddComponent<LineRenderer>();
+            // }
+            //
+            // lineRenderer.startWidth = 0.1f;
+            // lineRenderer.endWidth = 0.1f;
+            // lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            // lineRenderer.startColor = Color.red;
+            // lineRenderer.endColor = Color.red;
+            //
+            // // Set the positions of the line
+            // Vector3[] positions = new Vector3[2];
+            // positions[0] = centerDetection;
+            // positions[1] = centerDetection + wallOffset;
+            //
+            // lineRenderer.positionCount = positions.Length;
+            // lineRenderer.SetPositions(positions);
+
+            //wall run exit condition
+            if (!Input.GetButton("Run") || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f) || !footRaycast.hit || !centerRaycast.hit)
+            {
+                CharacterMovement.TryWallRunning(new Contact());
                 return;
             }
             
-            CharacterMovement.UseGravity = false;
-            CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
-            
-            Vector3 wallRunDirection = Vector3.Cross(InitialWallRunContact.normal, Vector3.up).normalized;
+            Vector3 wallRunForward = Vector3.Cross(InitialWallRunContact.normal, Vector3.up).normalized;
 
-            //fix cross product sometimes finding the backwards direction axis and set it forwards
-            if (Vector3.Dot(Controller.Forward, wallRunDirection) < 0)
+            if (Vector3.Dot(Controller.Forward, wallRunForward) < 0)
             {
-                wallRunDirection = -wallRunDirection;
+                wallRunForward = -wallRunForward;
             }
-            
-            Controller.Velocity = wallRunDirection * Controller.Velocity.magnitude;
+
+            float forwardSpeed = Controller.Velocity.magnitude;
+
+            Controller.Velocity = wallRunForward * forwardSpeed;
         }
 
         private void HandleCrouching()
@@ -331,20 +390,10 @@ namespace TOMBSATYR
 
         private void HandleLongJump(bool obj)
         {
-            if (!Input.GetButton("Run"))
+            if (!Input.GetButton("Run") || PlayerRef.GetConsumedStamina() <= 2.0f)
             {
                 return;
             }
-
-            if (PlayerRef.GetConsumedStamina() <= 2.0f)
-            {
-                print(PlayerRef.GetConsumedStaminaRatio());
-                print(PlayerRef.GetConsumedStamina());
-                return;
-            }
-
-            print(PlayerRef.GetConsumedStaminaRatio());
-            print(PlayerRef.GetConsumedStamina());
             
             float forceMagnitude = LongJumpForce * PlayerRef.GetConsumedStaminaRatio() * Vector3.Dot(Controller.Velocity, Controller.Forward);
             PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude, true, true);

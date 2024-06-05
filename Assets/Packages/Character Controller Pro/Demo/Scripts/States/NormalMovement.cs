@@ -149,10 +149,10 @@ namespace Lightbug.CharacterControllerPro.Demo
         }
 
 
-        public void SetWallRunning(Contact wallContact)
+        public void TryWallRunning(Contact wallContact)
         {
             
-            if (!bIsWallRunning && wallContact.gameObject != null)
+            if (!bIsWallRunning && wallContact.gameObject != null && CharacterActor.IsGrounded == false)
             {
                 bIsWallRunning = true;
                 
@@ -167,12 +167,20 @@ namespace Lightbug.CharacterControllerPro.Demo
                 {
                     wallRunDirection = "LeftWallRun";
                 }
+                
+                CharacterActor.alwaysNotGrounded = true;
+                UseGravity = false;
+                lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+                
             }
 
             if (wallContact.gameObject == null)
             {
                 bIsWallRunning = false;
                 wallRunDirection = "";
+                CharacterActor.alwaysNotGrounded = false;
+                UseGravity = true;
+                lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
             }
         }
 
