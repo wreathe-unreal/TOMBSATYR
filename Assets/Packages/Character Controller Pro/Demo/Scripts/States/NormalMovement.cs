@@ -154,6 +154,7 @@ namespace Lightbug.CharacterControllerPro.Demo
             
             if (!bIsWallRunning && wallContact.gameObject != null && CharacterActor.IsGrounded == false)
             {
+                print("starting a wall run");
                 bIsWallRunning = true;
                 
                 // Determine if the wall is on the left or right side of the character
@@ -174,8 +175,9 @@ namespace Lightbug.CharacterControllerPro.Demo
                 
             }
 
-            if (wallContact.gameObject == null)
+            if (wallContact.gameObject == null && bIsWallRunning)
             {
+                print("exiting wall run");
                 bIsWallRunning = false;
                 wallRunDirection = "";
                 CharacterActor.alwaysNotGrounded = false;
@@ -828,7 +830,6 @@ namespace Lightbug.CharacterControllerPro.Demo
             CharacterStateController.Animator.SetBool(wallRunParameter, IsWallRunning());
             if (wallRunDirection != "")
             {
-                print(wallRunDirection);
                 CharacterStateController.Animator.SetTrigger(wallRunDirection);
             }
             CharacterStateController.Animator.SetBool(groundedParameter, CharacterActor.IsGrounded);

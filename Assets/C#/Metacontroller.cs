@@ -44,7 +44,8 @@ namespace TOMBSATYR
         private float DefaultJumpApex;
         private float DefaultJumpSpeed;
         private Contact InitialWallRunContact;
-        
+        private bool bCanWallRun = true;
+        private Vector3 WallDirection;
         
         private LineRenderer LineRenderer;
 
@@ -61,6 +62,7 @@ namespace TOMBSATYR
 
             Controller.OnWallHit += AddUngroundedJump; //walljump
             Controller.OnWallHit += CheckWallRun;
+            Controller.OnGroundedStateEnter += UnbanWallRunning;
             Controller.OnGroundedStateEnter += ResetUngroundedJumps;
             Controller.OnGroundedStateEnter += CalculateFallDamage;
             Controller.OnGroundedStateEnter += ResetLookDirectionParams;
@@ -75,6 +77,8 @@ namespace TOMBSATYR
             CharacterMovement.OnGroundedJumpPerformed += HandleLongJump;
             CharacterMovement.OnNotGroundedJumpPerformed += HandleUngroundedJump;
             CharacterMovement.OnNotGroundedJumpPerformed += ModifyJumpApex;
+            CharacterMovement.OnNotGroundedJumpPerformed += ExitWallRun;
+
 
             DefaultSlopeLimit = Controller.slopeLimit;
             DefaultFOV = PlayerCamera.fieldOfView;
@@ -83,6 +87,16 @@ namespace TOMBSATYR
             DefaultJumpSpeed = CharacterMovement.verticalMovementParameters.jumpSpeed;
 
             //Controller.OnGroundedStateExit += FindNearestResetpoint;
+        }
+
+        private void UnbanWallRunning(Vector3 obj)
+        {
+            bCanWallRun = true;
+        }
+
+        private void ExitWallRun(int obj)
+        {
+            CharacterMovement.TryWallRunning(new Contact());
         }
 
         private void ResetConsumedStamina(Vector3 obj)
@@ -122,6 +136,11 @@ namespace TOMBSATYR
 
         private void CheckWallRun(Contact contact)
         {
+            if (bCanWallRun == false || CharacterMovement.IsWallRunning())
+            {
+                return;
+            }
+            
             //various filters we check and return if they are not met
             float angle = Vector3.Angle(-contact.normal, Controller.Forward);
 
@@ -161,12 +180,30 @@ namespace TOMBSATYR
                 return;
             }
             
+            InitialWallRunContact = contact;
+
+            float dotProduct = Vector3.Dot(Controller.Right, InitialWallRunContact.normal);
+            print("dot:" + dotProduct);
+
+            if (dotProduct < -.7)
+            {
+                WallDirection = Controller.Right;
+            }
+            else if (dotProduct >= .7)
+            {
+                WallDirection = -Controller.Right;
+            }
+            else
+            {
+                print("bad dot product");
+                return;
+            }
+            
             //by setting an initialized contact we tell the method we made on the controller that we have a valid wall run
             //we have to pass a contact so that it can access the normal on the wall to find the wall direction for animating purposes
-            CharacterMovement.TryWallRunning(InitialWallRunContact); 
-            InitialWallRunContact = contact;
-            
-
+            CharacterMovement.TryWallRunning(InitialWallRunContact);
+            AddUngroundedJump(new Contact());
+            bCanWallRun = false;
             
         }
         
@@ -260,26 +297,12 @@ namespace TOMBSATYR
                 return;
             }
 
-            Vector3 wallSide = Vector3.zero;
-
-            float dotProduct = Vector3.Dot(Controller.Right, InitialWallRunContact.normal);
-
-            if (dotProduct < 0)
-            {
-                wallSide = Controller.Right;
-            }
-
-            if (dotProduct >= 0)
-            {
-                wallSide = -Controller.Right;
-            }
-
             LayerMask layerMask = LayerMask.GetMask("Default");
             HitInfo footRaycast = new HitInfo();
             HitInfo centerRaycast = new HitInfo();
             Vector3 centerDetection = Controller.Center;
             Vector3 footDetection = Controller.Bottom;
-            Vector3 wallOffset = wallSide * 5f;
+            Vector3 wallOffset = WallDirection * .5f;
             HitInfoFilter ledgeHitInfoFilter = new HitInfoFilter(layerMask, false, true);
 
             Controller.PhysicsComponent.Raycast(
