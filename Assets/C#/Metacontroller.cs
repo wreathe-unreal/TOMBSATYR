@@ -45,7 +45,6 @@ namespace TOMBSATYR
         private float DefaultJumpSpeed;
         private Contact InitialWallRunContact;
         private bool bCanWallRun = true;
-        private Vector3 WallDirection;
         
         private LineRenderer LineRenderer;
 
@@ -108,29 +107,7 @@ namespace TOMBSATYR
         void Update()
         {
             FrameFallVelocity = Controller.Velocity.y;
-            UpdateStaminaState();
             FrameMovementOverrides();
-        }
-
-        private void UpdateStaminaState()
-        {
-            if (CharacterMovement.IsWallRunning())
-            {
-                PlayerRef.StaminaState = EStaminaState.WallRun;
-            }
-            else if(Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity != Vector3.zero && !Input.GetButton("Crouch"))
-            {
-                PlayerRef.StaminaState = EStaminaState.Sprint;
-            }
-            
-            else if(Input.GetButton("Run") && Controller.IsGrounded && Controller.Velocity == Vector3.zero && Input.GetButton("Crouch"))
-            {
-                PlayerRef.StaminaState = EStaminaState.HighJump;
-            }
-            else
-            {
-                PlayerRef.StaminaState = EStaminaState.Idle;
-            }
         }
 
 
@@ -162,11 +139,11 @@ namespace TOMBSATYR
                 return;
             }
             
-            // if (Vector3.Dot(Vector3.Project(Controller.Velocity.normalized, Controller.Forward), Controller.Forward) < .6f)
-            // {
-            //     print("velocity not mostly forward");
-            //     return;
-            // }
+            if (Vector3.Dot(Controller.Velocity.normalized, Controller.Forward) < .8f)
+            {
+                print("velocity not mostly forward");
+                return;
+            }
 
             if (Controller.Velocity.magnitude < 5f)
             {
@@ -181,34 +158,23 @@ namespace TOMBSATYR
             }
             
             InitialWallRunContact = contact;
-
-            float dotProduct = Vector3.Dot(Controller.Right, InitialWallRunContact.normal);
-            print("dot:" + dotProduct);
-
-            if (dotProduct < -.7)
-            {
-                WallDirection = Controller.Right;
-            }
-            else if (dotProduct >= .7)
-            {
-                WallDirection = -Controller.Right;
-            }
-            else
-            {
-                print("bad dot product");
-                return;
-            }
             
             //by setting an initialized contact we tell the method we made on the controller that we have a valid wall run
             //we have to pass a contact so that it can access the normal on the wall to find the wall direction for animating purposes
             CharacterMovement.TryWallRunning(InitialWallRunContact);
             AddUngroundedJump(new Contact());
+            PlayerRef.GhostFX.SetActive(.75f);
             bCanWallRun = false;
             
         }
         
         private void HandleHighJump(bool b)
         {
+            if (PlayerRef.StaminaState != EStaminaState.HighJump)
+            {
+                return;
+            }
+            
             if(!Input.GetButton("Run")  || !Input.GetButton("Crouch"))
             {
                 return;
@@ -302,7 +268,18 @@ namespace TOMBSATYR
             HitInfo centerRaycast = new HitInfo();
             Vector3 centerDetection = Controller.Center;
             Vector3 footDetection = Controller.Bottom;
-            Vector3 wallOffset = WallDirection * .5f;
+            
+            Vector3 wallOffset = new Vector3();
+            if (CharacterMovement.wallRunDirection == "LeftWallRun")
+            {
+                wallOffset = -Controller.Right;
+            }
+            else
+            {
+                wallOffset = Controller.Right;
+            }
+
+            wallOffset *= .5f;
             HitInfoFilter ledgeHitInfoFilter = new HitInfoFilter(layerMask, false, true);
 
             Controller.PhysicsComponent.Raycast(
@@ -366,7 +343,7 @@ namespace TOMBSATYR
         
         private void HandleRunning()
         {
-            if (CharacterMovement.IsRunning() && !CharacterMovement.IsWallRunning())
+            if (CharacterMovement.IsRunning() && PlayerRef.StaminaState == EStaminaState.Sprint && !CharacterMovement.IsWallRunning())
             {
                 if (!Mathf.Approximately(Controller.slopeLimit, DefaultSlopeLimit))
                 {
@@ -413,7 +390,7 @@ namespace TOMBSATYR
 
         private void HandleLongJump(bool obj)
         {
-            if (!Input.GetButton("Run") || PlayerRef.GetConsumedStamina() <= 2.0f)
+            if (!Input.GetButton("Run") || PlayerRef.GetConsumedStamina() <= 2.0f || PlayerRef.StaminaState != EStaminaState.Sprint)
             {
                 return;
             }

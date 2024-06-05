@@ -50,7 +50,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         protected string wallRunParameter = "WallRun";
 
         [SerializeField] 
-        protected string wallRunDirection;
+        public string wallRunDirection;
         
         
 
@@ -96,7 +96,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         protected float targetHeight = 1f;
 
         protected bool wantToCrouch = false;
-        protected bool isCrouched = false;
+        public bool isCrouched = false;
 
         protected PlanarMovementParameters.PlanarMovementProperties currentMotion = new PlanarMovementParameters.PlanarMovementProperties();
         bool reducedAirControlFlag = false;
@@ -104,6 +104,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         float reductionDuration = 0.5f;
 
         private bool bIsWallRunning = false;
+        private bool bWallRunTriggerSet = false;
 
         protected override void Awake()
         {
@@ -152,10 +153,11 @@ namespace Lightbug.CharacterControllerPro.Demo
         public void TryWallRunning(Contact wallContact)
         {
             
-            if (!bIsWallRunning && wallContact.gameObject != null && CharacterActor.IsGrounded == false)
+            if (!bIsWallRunning && wallContact.gameObject != null && !CharacterActor.IsGrounded)
             {
                 print("starting a wall run");
                 bIsWallRunning = true;
+                bWallRunTriggerSet = false; //reseting the trigger state tracker bool
                 
                 // Determine if the wall is on the left or right side of the character
                 float dotProduct = Vector3.Dot(transform.right, wallContact.normal);
@@ -828,8 +830,10 @@ namespace Lightbug.CharacterControllerPro.Demo
                 return;
 
             CharacterStateController.Animator.SetBool(wallRunParameter, IsWallRunning());
-            if (wallRunDirection != "")
+            if (wallRunDirection != "" && !bWallRunTriggerSet)
             {
+                print("trigger" );
+                bWallRunTriggerSet = true;
                 CharacterStateController.Animator.SetTrigger(wallRunDirection);
             }
             CharacterStateController.Animator.SetBool(groundedParameter, CharacterActor.IsGrounded);

@@ -52,6 +52,8 @@ namespace TOMBSATYR
         [SerializeField, ReadOnly] private Checkpoint CurrentCheckpoint;
         [SerializeField, ReadOnly] private Resetpoint CurrentResetpoint;
         public Ghost GhostFX;
+
+        private NormalMovement CharacterMovement;
         
 
 
@@ -59,6 +61,7 @@ namespace TOMBSATYR
         void Start()
         {
             GhostFX = gameObject.AddComponent<Ghost>();
+            CharacterMovement = transform.Find("Controller/States").GetComponent<NormalMovement>();
             ScreenFader = FindObjectOfType<Respawner>();
             Health = HEALTH_MAX;
             Stamina = STAMINA_MAX;
@@ -68,6 +71,7 @@ namespace TOMBSATYR
         
         void Update()
         {
+            StaminaState = GetStaminaState();
             UpdateStamina();
 
             if (Input.GetButtonDown("Fire1"))
@@ -98,6 +102,58 @@ namespace TOMBSATYR
             Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
         }
 
+        
+        private EStaminaState GetStaminaState()
+        {
+            if (CharacterMovement.IsWallRunning())
+            {
+                return EStaminaState.WallRun;
+            }
+            else if (Input.GetButton("Run"))
+            {
+                if (Input.GetButton("Crouch"))
+                {
+                    if (Controller.Velocity == Vector3.zero)
+                    {
+                        return EStaminaState.HighJump;
+                    }
+                    else
+                    {
+                        if (CharacterMovement.isCrouched)
+                        {
+                            return EStaminaState.Idle;
+                        }
+                        else
+                        {
+                            return EStaminaState.Sprint;
+                        }
+                    }
+                }
+                else
+                {
+                    if (Controller.IsGrounded)
+                    {
+                        if(Controller.Velocity != Vector3.zero)
+                        {
+                            return EStaminaState.Sprint;
+                        }
+                        else
+                        {
+                            return EStaminaState.Idle;
+                        }
+                    }
+                    else
+                    {
+                        return EStaminaState.Idle;
+                    }
+                }
+            }
+            else
+            {
+                return EStaminaState.Idle;
+            }
+        }
+        
         private void UpdateStamina()
         {
             float modifier = 0f;
@@ -134,8 +190,6 @@ namespace TOMBSATYR
             
             Stamina += Time.deltaTime * modifier;
             Stamina = Mathf.Clamp(Stamina, STAMINA_MIN, STAMINA_MAX);
-
-            
         }
 
         public void TryResetConsumedStamina()

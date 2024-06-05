@@ -37,11 +37,13 @@ namespace Haipeng.Ghost_trail
 
             foreach (var drawing_mesh in this.DrawingMeshes)
             {
-                Matrix4x4 objectMatrix = transform.localToWorldMatrix;
-                Matrix4x4 scaleMatrix = Matrix4x4.Scale(Vector3.one * Scale);
-                Matrix4x4 finalMatrix = objectMatrix * scaleMatrix;
+                Matrix4x4 M_ToOrigin = Matrix4x4.Translate(-transform.position);
+                Matrix4x4 M_Scale = Matrix4x4.Scale(Vector3.one * Scale);
+                Matrix4x4 M_FromOrigin = Matrix4x4.Translate(transform.position);
 
-                Graphics.DrawMesh(drawing_mesh.mesh, finalMatrix, drawing_mesh.material, gameObject.layer, Camera.main, 0, null, drawing_mesh.shadowCastingMode, false, null);
+                Matrix4x4 M_LocalScale = M_FromOrigin * M_Scale * M_ToOrigin;
+
+                Graphics.DrawMesh(drawing_mesh.mesh, M_LocalScale , drawing_mesh.material, gameObject.layer, Camera.main, 0, null, drawing_mesh.shadowCastingMode, false, null);
                 drawing_mesh.left_time -= Time.deltaTime;
 
                 if (drawing_mesh.material.HasProperty("_BaseColor"))
