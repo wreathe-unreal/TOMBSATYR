@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Lightbug.CharacterControllerPro.Core;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace TOMBSATYR
 {
@@ -28,11 +29,25 @@ namespace TOMBSATYR
             PlayerRef = FindObjectOfType<Player>();
             BoidsController = GetComponentInChildren<FairyFlight>();
             FairyState = EFairyState.Idle;
-            OrbitLocation = FindObjectOfType<CharacterActor>().gameObject.FindChildWithTag("Fairy Orbit").transform;
+            
+            if(SceneManager.GetActiveScene().name == "MainMenu")
+            {
+                OrbitLocation = FindObjectOfType<Torch>().gameObject.FindChildWithTag("Fairy Orbit").transform;
+            }
+            else
+            {
+                OrbitLocation = FindObjectOfType<CharacterActor>().gameObject.FindChildWithTag("Fairy Orbit").transform;
+
+            }
         }
 
         void Update()
         {
+            if(SceneManager.GetActiveScene().name == "MainMenu")
+            {
+                return;
+            }
+            
             CheckDistanceToPlayer();
             TryLightTorch();
         }

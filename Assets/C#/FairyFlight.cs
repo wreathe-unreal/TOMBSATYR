@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Lightbug.CharacterControllerPro.Core;
+using UnityEngine.SceneManagement;
 
 namespace TOMBSATYR
 {
@@ -43,7 +44,15 @@ namespace TOMBSATYR
             PhysicsBody.useGravity = false; // Disable gravity if you don't want the objects to fall
             PhysicsBody.constraints = RigidbodyConstraints.FreezeRotationX; // Prevent rotation
 
-            SetOrigin(FindObjectOfType<CharacterActor>().gameObject.FindChildWithTag("Fairy Orbit").transform);
+            if(SceneManager.GetActiveScene().name == "MainMenu")
+            {
+                SetOrigin(FindObjectOfType<Torch>().gameObject.FindChildWithTag("Fairy Orbit").transform);
+            }
+            else
+            {
+                SetOrigin(FindObjectOfType<CharacterActor>().gameObject.FindChildWithTag("Fairy Orbit").transform);
+            }
+            
 
             RandomFreq = 1.0f / RandomFreq;
 
