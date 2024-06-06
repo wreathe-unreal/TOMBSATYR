@@ -23,6 +23,7 @@ namespace TOMBSATYR
         public float HighJumpSpeedModifier = 10f;
         public float HighJumpApexDurationMod = .025f;
         public float LongJumpForce = 17f;
+        public float SlideForce = 16f;
         public int RunningSlopeAngleModifier = 5;
         public float WallJumpApexDurationModifier = .025f;
         public float WallRunGravity = 0.5f;
@@ -68,10 +69,10 @@ namespace TOMBSATYR
             Controller.OnGroundedStateEnter += ResetJumpApex;
             Controller.OnGroundedStateEnter += SpawnPlume;
             Controller.OnGroundedStateEnter += DisableGhost;
-            Controller.OnGroundedStateEnter += ResetConsumedStamina;
+            Controller.OnGroundedStateEnter += PlayerRef.ResetConsumedStamina;
             //Controller.OnGroundedStateExit += DebugMatrixMode;
             //Controller.OnGroundedStateEnter += DebugMatrixModeOff;
-
+            
             CharacterMovement.OnGroundedJumpPerformed += HandleHighJump;
             CharacterMovement.OnGroundedJumpPerformed += HandleLongJump;
             CharacterMovement.OnNotGroundedJumpPerformed += HandleUngroundedJump;
@@ -88,6 +89,26 @@ namespace TOMBSATYR
             //Controller.OnGroundedStateExit += FindNearestResetpoint;
         }
 
+
+
+        void Update()
+        {
+            FrameFallVelocity = Controller.Velocity.y;
+            FrameMovementOverrides();
+        }
+        
+        
+        
+        private void FrameMovementOverrides()
+        {
+            SetOverrides();
+            HandleInteract();
+            HandleRunning();
+            HandleCrouching();
+            HandleWallRunning();
+            HandleSlide();
+        }
+        
         private void UnbanWallRunning(Vector3 obj)
         {
             bCanWallRun = true;
@@ -97,19 +118,6 @@ namespace TOMBSATYR
         {
             CharacterMovement.TryWallRunning(new Contact());
         }
-
-        private void ResetConsumedStamina(Vector3 obj)
-        {
-            PlayerRef.StaminaConsumed = 0f;
-        }
-
-
-        void Update()
-        {
-            FrameFallVelocity = Controller.Velocity.y;
-            FrameMovementOverrides();
-        }
-
 
         private void CheckWallRun(Contact contact)
         {
@@ -139,11 +147,11 @@ namespace TOMBSATYR
                 return;
             }
             
-            if (Vector3.Dot(Controller.Velocity.normalized, Controller.Forward) < .8f)
-            {
-                print("velocity not mostly forward");
-                return;
-            }
+            // float forwardSpeed = Vector3.Dot(Controller.Velocity, Controller.Forward);
+            // {
+            //     print("velocity not mostly forward");
+            //     return;
+            // }
 
             if (Controller.Velocity.magnitude < 5f)
             {
@@ -166,6 +174,61 @@ namespace TOMBSATYR
             PlayerRef.GhostFX.SetActive(.75f);
             bCanWallRun = false;
             
+        }
+
+        private void HandleInteract()
+        {
+            if (Input.GetButton("Interact") && PlayerRef.StaminaState == EStaminaState.Idle)
+            {
+                if (Controller.IsGrounded)
+                {
+                    Controller.PlanarVelocity = Vector3.zero;
+                }
+                
+                CharacterMovement.TriggerInteract();
+            }
+            
+        }
+        
+        private void HandleSlide()
+        {
+            
+            if (PlayerRef.StaminaState != EStaminaState.Slide || PlayerRef.GetConsumedStamina() <= 9f || Controller.Velocity.magnitude < 5f || !Controller.IsGrounded)
+            {
+                if (CharacterMovement.IsSliding())
+                {
+                    CharacterMovement.SetSliding(false);
+                    CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
+                    CharacterActor.SizeReferenceType sizeRef = Controller.IsGrounded ?
+                        CharacterActor.SizeReferenceType.Bottom : CharacterMovement.crouchParameters.notGroundedReference;
+                    Controller.CheckAndInterpolateHeight(
+                        Controller.DefaultBodySize.y,
+                        CharacterMovement.crouchParameters.sizeLerpSpeed * Time.deltaTime, sizeRef);
+                    PlayerRef.ResetConsumedStamina(new Vector3());
+                }
+                return;
+            }
+
+            if (CharacterMovement.IsSliding() == false)
+            {
+                CharacterMovement.SetSliding(true);
+                /* below we steal the code from the controller for crouching adjusting character height */
+                
+                // Determine the size reference type based on whether the character is grounded
+                // Check and interpolate the character's height to the crouched height
+                CharacterActor.SizeReferenceType sizeReferenceType = Controller.IsGrounded ? CharacterActor.SizeReferenceType.Bottom : CharacterMovement.crouchParameters.notGroundedReference;
+                float crouchHeight = Controller.DefaultBodySize.y * CharacterMovement.crouchParameters.heightRatio;
+                float crouchSpeed = CharacterMovement.crouchParameters.sizeLerpSpeed * Time.deltaTime;
+                Controller.CheckAndInterpolateHeight(crouchHeight, crouchSpeed, sizeReferenceType);
+            
+                /* above we steal the code from the controller for crouching adjusting character height */
+            
+                //push the player forward
+                CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
+                float forceMagnitude = SlideForce * PlayerRef.GetConsumedStaminaRatio();
+                PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude, true, true);
+                PlayerRef.GhostFX.SetActive(.5f);
+            }
         }
         
         private void HandleHighJump(bool b)
@@ -240,14 +303,6 @@ namespace TOMBSATYR
         {
             PlayerRef.GhostFX.SetActive(.2f);
             UngroundedJumpsPerformed++;
-        }
-        
-        private void FrameMovementOverrides()
-        {
-            SetOverrides();
-            HandleRunning();
-            HandleCrouching();
-            HandleWallRunning();
         }
 
         private void SetOverrides()

@@ -15,6 +15,7 @@ public enum EStaminaState
 {
     Idle,
     Sprint,
+    Slide,
     WallRun,
     HighJump,
     
@@ -39,6 +40,7 @@ namespace TOMBSATYR
         public float WallRunStaminaDrain = .2f;
         public float HighJumpStaminaDrain = 30f;
         public float SprintStaminaDrain = 15f;
+        public float SlideStaminaDrain = 25f;
         public float StaminaRegen = 8;
         public float StaminaConsumed = 0f;
         
@@ -125,7 +127,7 @@ namespace TOMBSATYR
                         }
                         else
                         {
-                            return EStaminaState.Sprint;
+                            return EStaminaState.Slide;
                         }
                     }
                 }
@@ -178,6 +180,9 @@ namespace TOMBSATYR
                     break;
                 case EStaminaState.WallRun:
                     modifier = -WallRunStaminaDrain;
+                    break;
+                case EStaminaState.Slide:
+                    modifier = -SlideStaminaDrain;
                     break;
             }
             
@@ -375,5 +380,11 @@ namespace TOMBSATYR
             Health = HEALTH_MAX;
             Stamina = STAMINA_MAX;
         }
+
+        public void ResetConsumedStamina(Vector3 obj)
+        {
+            StaminaConsumed = 0f;
+        }
+
     }
 }

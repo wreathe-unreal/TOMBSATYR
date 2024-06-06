@@ -52,6 +52,10 @@ namespace Lightbug.CharacterControllerPro.Demo
         [SerializeField] 
         public string wallRunDirection;
         
+        [SerializeField] public string slideParameter = "Slide";
+
+        [SerializeField] public string interactParameter = "Interact";
+        
         
 
 
@@ -97,6 +101,7 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         protected bool wantToCrouch = false;
         public bool isCrouched = false;
+        private bool isSliding = false;
 
         protected PlanarMovementParameters.PlanarMovementProperties currentMotion = new PlanarMovementParameters.PlanarMovementProperties();
         bool reducedAirControlFlag = false;
@@ -105,6 +110,8 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         private bool bIsWallRunning = false;
         private bool bWallRunTriggerSet = false;
+        public bool bInteract;
+        private bool bInteractTriggerSet = false;
 
         protected override void Awake()
         {
@@ -829,13 +836,14 @@ namespace Lightbug.CharacterControllerPro.Demo
             if (!CharacterActor.IsAnimatorValid())
                 return;
 
-            CharacterStateController.Animator.SetBool(wallRunParameter, IsWallRunning());
-            if (wallRunDirection != "" && !bWallRunTriggerSet)
+            if (bInteract && bInteractTriggerSet == false)
             {
-                print("trigger" );
-                bWallRunTriggerSet = true;
-                CharacterStateController.Animator.SetTrigger(wallRunDirection);
+                bInteractTriggerSet = true;
+                CharacterStateController.Animator.SetTrigger(interactParameter);
             }
+            
+            
+            
             CharacterStateController.Animator.SetBool(groundedParameter, CharacterActor.IsGrounded);
             CharacterStateController.Animator.SetBool(stableParameter, CharacterActor.IsStable);
             CharacterStateController.Animator.SetFloat(horizontalAxisParameter, CharacterActions.movement.value.x);
@@ -854,6 +862,15 @@ namespace Lightbug.CharacterControllerPro.Demo
             // The PostSimulationUpdate (CharacterActor) might update velocity once more (e.g. if a "bad step" has been detected).
             CharacterStateController.Animator.SetFloat(verticalSpeedParameter, CharacterActor.LocalVelocity.y);
             CharacterStateController.Animator.SetFloat(planarSpeedParameter, CharacterActor.PlanarVelocity.magnitude);
+            
+            CharacterStateController.Animator.SetBool(wallRunParameter, IsWallRunning());
+            CharacterStateController.Animator.SetBool(slideParameter, IsSliding());
+            
+            if (wallRunDirection != "" && !bWallRunTriggerSet)
+            {
+                bWallRunTriggerSet = true;
+                CharacterStateController.Animator.SetTrigger(wallRunDirection);
+            }
         }
 
         protected virtual void HandleSize(float dt)
@@ -919,6 +936,24 @@ namespace Lightbug.CharacterControllerPro.Demo
         {
             ProcessVerticalMovement(dt);
             ProcessPlanarMovement(dt);
+        }
+
+        public void SetSliding(bool bIsSliding)
+        {
+            isSliding = bIsSliding;
+            
+            
+        }
+
+        public bool IsSliding()
+        {
+            return isSliding;
+        }
+
+        public void TriggerInteract()
+        {
+            bInteract = true;
+            bInteractTriggerSet = false;
         }
     }
 }
