@@ -77,7 +77,7 @@ namespace Lightbug.CharacterControllerPro.Demo
                 targetVerticalVelocity = CharacterActor.Up * baseSpeed;
                 CharacterActor.VerticalVelocity = Vector3.MoveTowards(CharacterActor.VerticalVelocity, targetVerticalVelocity, acceleration * dt);
             }
-            else if (CharacterActions.crouch.value)
+            else if (CharacterActions.crouch.value || CharacterActions.crouchaxis.value > FloatAction.DEADZONE)
             {
                 targetVerticalVelocity = -CharacterActor.Up * baseSpeed;
                 CharacterActor.VerticalVelocity = Vector3.MoveTowards(CharacterActor.VerticalVelocity, targetVerticalVelocity, acceleration * dt);

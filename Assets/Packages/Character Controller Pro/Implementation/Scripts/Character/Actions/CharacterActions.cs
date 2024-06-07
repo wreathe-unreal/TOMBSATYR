@@ -18,6 +18,8 @@ namespace Lightbug.CharacterControllerPro.Implementation
 
 
         // Float actions
+        public FloatAction @runaxis;
+        public FloatAction @crouchaxis;
         public FloatAction @pitch;
         public FloatAction @roll;
 
@@ -39,6 +41,8 @@ namespace Lightbug.CharacterControllerPro.Implementation
             @dash.Reset();
             @crouch.Reset();
 
+            @runaxis.Reset();
+            @crouchaxis.Reset();
             @pitch.Reset();
             @roll.Reset();
 
@@ -69,7 +73,8 @@ namespace Lightbug.CharacterControllerPro.Implementation
             @crouch = new BoolAction();
             @crouch.Initialize();
 
-
+            @runaxis = new FloatAction();
+            @crouchaxis = new FloatAction();
             @pitch = new FloatAction();
             @roll = new FloatAction();
 
@@ -92,6 +97,8 @@ namespace Lightbug.CharacterControllerPro.Implementation
             @dash.value = inputHandler.GetBool("Dash");
             @crouch.value = inputHandler.GetBool("Crouch");
 
+            @runaxis.value = inputHandler.GetFloat("RunAxis");
+            @crouchaxis.value = inputHandler.GetFloat("CrouchAxis");
             @pitch.value = inputHandler.GetFloat("Pitch");
             @roll.value = inputHandler.GetFloat("Roll");
 
@@ -114,6 +121,8 @@ namespace Lightbug.CharacterControllerPro.Implementation
             @pitch.value = characterActions.pitch.value;
             @roll.value = characterActions.roll.value;
 
+            @runaxis.value = characterActions.runaxis.value;
+            @crouchaxis.value = characterActions.crouchaxis.value;
             @pitch.value = characterActions.pitch.value;
             @roll.value = characterActions.roll.value;
             @movement.value = characterActions.movement.value;
@@ -131,6 +140,8 @@ namespace Lightbug.CharacterControllerPro.Implementation
             @jetPack.Update(dt);
             @dash.Update(dt);
             @crouch.Update(dt);
+            @runaxis.Update(dt);
+            crouchaxis.Update(dt);
 
         }
 

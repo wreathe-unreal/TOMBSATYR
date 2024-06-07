@@ -87,7 +87,9 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         public override void CheckExitTransition()
         {
-            if (CharacterActions.crouch.value || CharacterActor.IsGrounded || !CharacterActor.WallCollision || !CheckCenterRay())
+            if (CharacterActions.crouch.value 
+                || CharacterActions.crouchaxis.value > FloatAction.DEADZONE || 
+                CharacterActor.IsGrounded || !CharacterActor.WallCollision || !CheckCenterRay())
             {
                 CharacterStateController.EnqueueTransition<NormalMovement>();
             }
@@ -178,7 +180,7 @@ namespace Lightbug.CharacterControllerPro.Demo
             }
         }
 
-        protected bool IsGrabbing => CharacterActions.run.value && enableGrab;
+        protected bool IsGrabbing => (CharacterActions.run.value || CharacterActions.runaxis.value > FloatAction.DEADZONE) && enableGrab;
 
         public override void UpdateBehaviour(float dt)
         {

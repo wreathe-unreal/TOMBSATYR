@@ -239,7 +239,7 @@ namespace Lightbug.CharacterControllerPro.Demo
             }
             else if (!CharacterActor.IsGrounded)
             {
-                if (!CharacterActions.crouch.value)
+                if (!CharacterActions.crouch.value && CharacterActions.crouchaxis.value > FloatAction.DEADZONE)
                     CharacterStateController.EnqueueTransition<WallSlide>();
 
                 CharacterStateController.EnqueueTransition<LedgeHanging>();
@@ -366,12 +366,12 @@ namespace Lightbug.CharacterControllerPro.Demo
                     // Run ------------------------------------------------------------
                     if (planarMovementParameters.runInputMode == InputMode.Toggle)
                     {
-                        if (CharacterActions.run.Started)
+                        if (CharacterActions.run.Started || CharacterActions.runaxis.Started)
                             wantToRun = !wantToRun;
                     }
                     else
                     {
-                        wantToRun = CharacterActions.run.value;
+                        wantToRun = CharacterActions.run.value || CharacterActions.runaxis.value > FloatAction.DEADZONE;
                     }
 
                     if (wantToCrouch || !planarMovementParameters.canRun)
@@ -512,7 +512,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         protected virtual void ProcessJump(float dt)
         {
             // Prevent jump when crouch is active if the jump is not pressed
-            if (CharacterActions.crouch.value && !CharacterActions.jump.value)
+            if ((CharacterActions.crouch.value || CharacterActions.crouchaxis.value > FloatAction.DEADZONE) && !CharacterActions.jump.value)
             {
                 return;
             }
@@ -880,12 +880,12 @@ namespace Lightbug.CharacterControllerPro.Demo
             {
                 if (crouchParameters.inputMode == InputMode.Toggle)
                 {
-                    if (CharacterActions.crouch.Started)
+                    if (CharacterActions.crouch.Started || CharacterActions.crouchaxis.Started)
                         wantToCrouch = !wantToCrouch;
                 }
                 else
                 {
-                    wantToCrouch = CharacterActions.crouch.value;
+                    wantToCrouch = CharacterActions.crouch.value || CharacterActions.crouchaxis.value > FloatAction.DEADZONE;
                 }
 
                 if (!crouchParameters.notGroundedCrouch && !CharacterActor.IsGrounded)

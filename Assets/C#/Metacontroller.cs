@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Lightbug.CharacterControllerPro.Core;
 using Lightbug.CharacterControllerPro.Demo;
+using Lightbug.CharacterControllerPro.Implementation;
 using Lightbug.Utilities;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
@@ -96,7 +97,16 @@ namespace TOMBSATYR
             FrameFallVelocity = Controller.Velocity.y;
             FrameMovementOverrides();
         }
-        
+
+        public bool IsRunPressed()
+        {
+            return Input.GetButton("Run") || Input.GetAxis("RunAxis") > FloatAction.DEADZONE; 
+        }
+
+        public bool IsCrouchPressed()
+        {
+            return Input.GetButton("Crouch") || Input.GetAxis("CrouchAxis") > FloatAction.DEADZONE;
+        }
         
         
         private void FrameMovementOverrides()
@@ -134,8 +144,8 @@ namespace TOMBSATYR
                 print("not default layer");
                 return;
             }
-            
-            if (!Input.GetButton("Run"))
+
+            if (!IsRunPressed())
             {
                 print("no sprint");
                 return;
@@ -238,7 +248,7 @@ namespace TOMBSATYR
                 return;
             }
             
-            if(!Input.GetButton("Run")  || !Input.GetButton("Crouch"))
+            if(!IsRunPressed() || !IsCrouchPressed())
             {
                 return;
             }
@@ -373,7 +383,7 @@ namespace TOMBSATYR
             // lineRenderer.SetPositions(positions);
 
             //wall run exit condition
-            if (!Input.GetButton("Run") || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f) || !footRaycast.hit || !centerRaycast.hit)
+            if (!IsRunPressed() || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f) || !footRaycast.hit || !centerRaycast.hit)
             {
                 CharacterMovement.TryWallRunning(new Contact());
                 return;
@@ -445,7 +455,7 @@ namespace TOMBSATYR
 
         private void HandleLongJump(bool obj)
         {
-            if (!Input.GetButton("Run") || PlayerRef.GetConsumedStamina() <= 2.0f || PlayerRef.StaminaState != EStaminaState.Sprint)
+            if (!IsRunPressed() || PlayerRef.GetConsumedStamina() <= 2.0f || PlayerRef.StaminaState != EStaminaState.Sprint)
             {
                 return;
             }

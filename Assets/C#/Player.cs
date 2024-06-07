@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.VFX;
 using Haipeng.Ghost_trail;
+using Lightbug.CharacterControllerPro.Implementation;
 using UnityEditor;
 
 
@@ -105,15 +106,25 @@ namespace TOMBSATYR
         }
 
         
+        public bool IsRunPressed()
+        {
+            return Input.GetButton("Run") || Input.GetAxis("RunAxis") > FloatAction.DEADZONE; 
+        }
+
+        public bool IsCrouchPressed()
+        {
+            return Input.GetButton("Crouch") || Input.GetAxis("CrouchAxis") > FloatAction.DEADZONE;
+        }
+        
         private EStaminaState GetStaminaState()
         {
             if (CharacterMovement.IsWallRunning())
             {
                 return EStaminaState.WallRun;
             }
-            else if (Input.GetButton("Run"))
+            else if (IsRunPressed())
             {
-                if (Input.GetButton("Crouch"))
+                if (IsCrouchPressed())
                 {
                     if (Controller.Velocity == Vector3.zero)
                     {
@@ -200,8 +211,8 @@ namespace TOMBSATYR
         public void TryResetConsumedStamina()
         {
             
-            if (!Input.GetButton("Run") && !Mathf.Approximately(GetNormalizedStamina(), 1f) 
-                || (Controller.Velocity == Vector3.zero && Controller.IsGrounded && !Input.GetButton("Crouch")) 
+            if (!IsRunPressed() && !Mathf.Approximately(GetNormalizedStamina(), 1f) 
+                || (Controller.Velocity == Vector3.zero && Controller.IsGrounded && !IsCrouchPressed()) 
                 || StaminaState == EStaminaState.Idle)
             {
                 StartCoroutine(ResetStaminaConsumedAfterDelay(0.1f)); //essentially coyote time but for stamina consumption for our j
