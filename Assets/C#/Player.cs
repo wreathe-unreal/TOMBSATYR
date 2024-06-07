@@ -10,6 +10,7 @@ using UnityEngine.VFX;
 using Haipeng.Ghost_trail;
 using Lightbug.CharacterControllerPro.Implementation;
 using UnityEditor;
+using UnityEngine.TextCore.Text;
 
 
 public enum EStaminaState
@@ -57,8 +58,9 @@ namespace TOMBSATYR
         public Ghost GhostFX;
 
         private NormalMovement CharacterMovement;
-        
 
+
+        private bool bHighJumpExit = false;
 
         // Start is called before the first frame update
         void Start()
@@ -118,6 +120,15 @@ namespace TOMBSATYR
         
         private EStaminaState GetStaminaState()
         {
+            if (bHighJumpExit && (IsRunPressed()) && (IsCrouchPressed()))
+            {
+                return StaminaState = EStaminaState.Idle;
+            }
+            else
+            {
+                bHighJumpExit = false;  
+            }
+            
             if (CharacterMovement.IsWallRunning())
             {
                 return EStaminaState.WallRun;
@@ -128,11 +139,20 @@ namespace TOMBSATYR
                 {
                     if (Controller.Velocity == Vector3.zero)
                     {
-                        return EStaminaState.HighJump;
+                        if ((Stamina > 0f && Controller.IsGrounded)|| !Controller.IsGrounded)
+                        {
+                            return EStaminaState.HighJump;
+                        }
+                        else
+                        {
+                            bHighJumpExit = true;
+                            ResetConsumedStamina(new Vector3());
+                            return EStaminaState.Idle;
+                        }
                     }
                     else
                     {
-                        if (CharacterMovement.isCrouched)
+                        if (CharacterMovement.isCrouched || !Controller.IsGrounded)
                         {
                             return EStaminaState.Idle;
                         }

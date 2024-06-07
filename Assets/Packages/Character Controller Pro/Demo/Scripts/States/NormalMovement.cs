@@ -110,8 +110,10 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         private bool bIsWallRunning = false;
         private bool bWallRunTriggerSet = false;
-        public bool bInteract;
+        public bool bInteract = false;
         private bool bInteractTriggerSet = false;
+        private float interactDuration = .75f;
+        private float interactElapsed = 0f;
 
         protected override void Awake()
         {
@@ -127,6 +129,11 @@ namespace Lightbug.CharacterControllerPro.Demo
             verticalMovementParameters.OnValidate();
         }
 
+        protected void Update()
+        {
+            
+        }
+        
         protected override void Start()
         {
             base.Start();
@@ -836,10 +843,16 @@ namespace Lightbug.CharacterControllerPro.Demo
             if (!CharacterActor.IsAnimatorValid())
                 return;
 
-            if (bInteract && bInteractTriggerSet == false)
+            if (bInteract && !bInteractTriggerSet)
             {
                 bInteractTriggerSet = true;
                 CharacterStateController.Animator.SetTrigger(interactParameter);
+                bInteract = false;
+            }
+
+            if (bInteractTriggerSet && interactElapsed < interactDuration)
+            {
+                interactElapsed += dt;
             }
             
             
@@ -885,13 +898,13 @@ namespace Lightbug.CharacterControllerPro.Demo
                 }
                 else
                 {
-                    wantToCrouch = CharacterActions.crouch.value || CharacterActions.crouchaxis.value > FloatAction.DEADZONE;
+                    wantToCrouch = CharacterActions.crouch.value || CharacterActions.crouchaxis.value > FloatAction.DEADZONE && CharacterActor.IsGrounded;
                 }
 
                 if (!crouchParameters.notGroundedCrouch && !CharacterActor.IsGrounded)
                     wantToCrouch = false;
 
-                if (CharacterActor.IsGrounded && wantToRun)
+                if (CharacterActor.IsGrounded && wantToRun && CharacterActor.PlanarVelocity.magnitude > 0f)
                     wantToCrouch = false;
             }
             else
@@ -900,9 +913,14 @@ namespace Lightbug.CharacterControllerPro.Demo
             }
 
             if (wantToCrouch)
+            {
+                wantToRun = false;
                 Crouch(dt);
+            }
             else
+            {
                 StandUp(dt);
+            }
         }
 
         void Crouch(float dt)
@@ -952,8 +970,15 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         public void TriggerInteract()
         {
+            if (interactElapsed < interactDuration && bInteractTriggerSet)
+            {
+                return;
+            }
+            
+            interactElapsed = 0f;
             bInteract = true;
             bInteractTriggerSet = false;
+            
         }
     }
 }

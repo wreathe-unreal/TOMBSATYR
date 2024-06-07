@@ -390,15 +390,19 @@ namespace TOMBSATYR
             }
             
             Vector3 wallRunForward = Vector3.Cross(InitialWallRunContact.normal, Vector3.up).normalized;
-
+            
             if (Vector3.Dot(Controller.Forward, wallRunForward) < 0)
             {
                 wallRunForward = -wallRunForward;
             }
 
-            float forwardSpeed = Controller.Velocity.magnitude;
+            Vector3 controllerPlanar = new Vector3(Controller.Velocity.x, 0f, Controller.Velocity.z);
 
-            Controller.Velocity = wallRunForward * forwardSpeed;
+            float newVertical = Controller.Velocity.y - WallRunGravity * Time.deltaTime;
+
+            float forwardSpeed = controllerPlanar.magnitude;
+
+            Controller.Velocity = wallRunForward * forwardSpeed + new Vector3(0f, newVertical, 0f);
         }
 
         private void HandleCrouching()
@@ -460,9 +464,10 @@ namespace TOMBSATYR
                 return;
             }
             
-            float forceMagnitude = LongJumpForce * PlayerRef.GetConsumedStaminaRatio() * Vector3.Dot(Controller.Velocity, Controller.Forward);
-            PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude, true, true);
+            float forceMagnitude = LongJumpForce * PlayerRef.GetConsumedStaminaRatio() * Vector3.Dot(Controller.Velocity.normalized, Controller.Forward);
             
+            PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude, true, true);
+
             if (PlayerRef.GetConsumedStamina() > 10f)
             {
                 PlayerRef.GhostFX.SetActive(.75f);
