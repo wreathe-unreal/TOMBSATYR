@@ -42,12 +42,14 @@ namespace TOMBSATYR
         private float DefaultFOV;
         private float DefaultJumpApexDuration;
 
+        private float DefaultJumpSpeed = 14.6f;
+        
         private float FrameFallVelocity = 0f;
 
         private float DefaultJumpApex;
-        private float DefaultJumpSpeed;
         private Contact InitialWallRunContact;
         private bool bCanWallRun = true;
+        private float WALLRUN_DISPLACEMENT = .65f;
         public GameObject DustPlume;
         
         private LineRenderer LineRenderer;
@@ -65,6 +67,7 @@ namespace TOMBSATYR
 
             Controller.OnWallHit += AddUngroundedJump; //walljump
             Controller.OnWallHit += CheckWallRun;
+            Controller.OnGroundedStateEnter += ResetJumpSpeed;
             Controller.OnGroundedStateEnter += UnbanWallRunning;
             Controller.OnGroundedStateEnter += ResetUngroundedJumps;
             Controller.OnGroundedStateEnter += CalculateFallDamage;
@@ -92,8 +95,6 @@ namespace TOMBSATYR
             //Controller.OnGroundedStateExit += FindNearestResetpoint;
         }
 
-
-
         void Update()
         {
             FrameFallVelocity = Controller.Velocity.y;
@@ -119,6 +120,12 @@ namespace TOMBSATYR
             HandleCrouching();
             HandleWallRunning();
             HandleSlide();
+        }
+        
+        
+        private void ResetJumpSpeed(Vector3 obj)
+        {
+            CharacterMovement.verticalMovementParameters.jumpSpeed = DefaultJumpSpeed;
         }
         
         private void UnbanWallRunning(Vector3 obj)
@@ -149,13 +156,11 @@ namespace TOMBSATYR
 
             if (!IsRunPressed())
             {
-                print("no sprint");
                 return;
             }
 
-            if (!Controller.IsAscending && Controller.IsGrounded == false)
+            if (!Controller.IsAscending && !Controller.IsGrounded)
             {
-                print("no ascension");
                 return;
             }
             
@@ -167,13 +172,11 @@ namespace TOMBSATYR
 
             if (Controller.Velocity.magnitude < 5f)
             {
-                print("velocity not high enough");
                 return;
             }
 
             if (angle <= 45f || angle >= 90f)
             {
-                print("wall angle bad");
                 return;
             }
             
@@ -344,17 +347,17 @@ namespace TOMBSATYR
             Vector3 centerDetection = Controller.Center;
             Vector3 footDetection = Controller.Bottom;
 
-            Vector3 wallOffset = new Vector3();
+            Vector3 wallDirection = new Vector3();
             if (CharacterMovement.wallRunDirection == "LeftWallRun")
             {
-                wallOffset = -Controller.Right;
+                wallDirection = -Controller.Right;
             }
             else
             {
-                wallOffset = Controller.Right;
+                wallDirection = Controller.Right;
             }
 
-            wallOffset *= .5f;
+            Vector3 wallOffset = wallDirection * (WALLRUN_DISPLACEMENT + .1f);
             HitInfoFilter ledgeHitInfoFilter = new HitInfoFilter(layerMask, false, true);
 
             Controller.PhysicsComponent.Raycast(
@@ -393,12 +396,26 @@ namespace TOMBSATYR
             // lineRenderer.SetPositions(positions);
 
             //wall run exit condition
-            if (!IsRunPressed() || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f) || !footRaycast.hit ||
-                !centerRaycast.hit)
+            if (!IsRunPressed() || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f) || !footRaycast.hit || !centerRaycast.hit)
             {
                 CharacterMovement.TryWallRunning(new Contact());
                 return;
             }
+            
+            
+            Vector3 newPositionOffWall = footRaycast.point.DisplaceFromPoint(-wallDirection, WALLRUN_DISPLACEMENT);
+            
+            newPositionOffWall.y = Controller.Position.y;
+
+            Controller.Position = newPositionOffWall;
+            
+            
+            
+            
+            
+            //create a flat offset of the character's position from the wall
+            //we get the wallcontact normal, normalize it, and multiply it by our offset
+            //
 
             Vector3 wallRunForward = Vector3.Cross(InitialWallRunContact.normal, Vector3.up).normalized;
 
@@ -459,6 +476,7 @@ namespace TOMBSATYR
             {
                 return;
             }
+
             
             if (UngroundedJumpsPerformed >= 3)
             {

@@ -345,6 +345,32 @@ namespace Lightbug.CharacterControllerPro.Demo
                         CharacterActor.Animator.SetBool(traverseParameter, false);
                         return;
                     }
+
+
+                    HitInfo ledgeHitInfo = new HitInfo();
+                    HitInfoFilter ledgeHitInfoFilter = new HitInfoFilter(layerMask, false, true);
+                    Vector3 rayCastOrigin = CharacterActor.Top - CharacterActor.Up * .29f - CharacterActor.Forward * .5f;
+                    Vector3 rayCastDisplacement = CharacterActor.Forward * 0.8f;
+            
+                    CharacterActor.PhysicsComponent.Raycast(
+                        out ledgeHitInfo,
+                        rayCastOrigin,
+                        rayCastDisplacement,
+                        in ledgeHitInfoFilter);
+
+                    if (ledgeHitInfo.hit)
+                    {
+                     
+                        Vector3 desiredDisplacement = -ledgeHitInfo.direction * .45f* ledgeHitInfo.distance;
+                        Vector3 newPositionOffWall = desiredDisplacement + ledgeHitInfo.point;
+                        newPositionOffWall.y = CharacterActor.Position.y * .995f;
+
+                        CharacterActor.Position = newPositionOffWall;   
+                    }
+                    else
+                    {
+                        print("raycast failed");
+                    }
                     
                     CharacterActor.Position += posOffset;
 
@@ -478,6 +504,9 @@ namespace Lightbug.CharacterControllerPro.Demo
 
             CustomUtilities.DrawArrowGizmo(leftOrigin, leftOrigin - transform.up * ledgeDetectionDistance, Color.red, 0.15f);
             CustomUtilities.DrawArrowGizmo(rightOrigin, rightOrigin - transform.up * ledgeDetectionDistance, Color.red, 0.15f);
+            // Vector3 rayCastOrigin = CharacterActor.Top - CharacterActor.Up * .29f;
+            // Vector3 rayCastDisplacement = CharacterActor.Forward * 0.8f;
+            // CustomUtilities.DrawArrowGizmo(rayCastOrigin, rayCastOrigin + rayCastDisplacement, Color.blue, .15f);
         }
 
 #endif

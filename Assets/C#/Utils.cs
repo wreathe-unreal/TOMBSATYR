@@ -5,6 +5,17 @@ using UnityEngine;
 
 namespace TOMBSATYR
 {
+    public static class Vector3Extensions
+    {
+        public static Vector3 DisplaceFromPoint(this Vector3 point, Vector3 direction, float displacement)
+        {
+
+            Vector3 desiredDisplacement = direction * displacement;
+            Vector3 newPositionOffWall = desiredDisplacement + point;
+            return newPositionOffWall;
+        }
+    }
+    
     public static class CameraExtensions
     {
         public static bool IsInView(this Camera camera, GameObject obj, float angle)

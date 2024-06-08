@@ -114,6 +114,8 @@ namespace Lightbug.CharacterControllerPro.Demo
         private bool bInteractTriggerSet = false;
         private float interactDuration = .75f;
         private float interactElapsed = 0f;
+        public float UngroundedJumpVertical = 12f;
+        public float UngroundedJumpHorizontal = 8f;
 
         protected override void Awake()
         {
@@ -299,8 +301,10 @@ namespace Lightbug.CharacterControllerPro.Demo
                         float time = Time.time - reducedAirControlInitialTime;
                         if (time <= reductionDuration)
                         {
-                            currentMotion.acceleration = (planarMovementParameters.notGroundedAcceleration / reductionDuration) * time;
-                            currentMotion.deceleration = (planarMovementParameters.notGroundedDeceleration / reductionDuration) * time;
+                            //currentMotion.acceleration = (planarMovementParameters.notGroundedAcceleration / reductionDuration) * time;
+                            //currentMotion.deceleration = (planarMovementParameters.notGroundedDeceleration / reductionDuration) * time;
+                            currentMotion.acceleration = 0f;
+                            currentMotion.deceleration = 0f;
                         }
                         else
                         {
@@ -498,7 +502,16 @@ namespace Lightbug.CharacterControllerPro.Demo
                         }
                         else if (notGroundedJumpsLeft != 0)  // Do a not grounded jump
                         {
-                            jumpResult = JumpResult.NotGrounded;
+                            
+                            if (CharacterActor.WallContacts.Count == 0)
+                            {
+                                jumpResult = JumpResult.Invalid;
+                            }
+                            else
+                            {
+                                jumpResult = JumpResult.NotGrounded;
+
+                            }
                         }
                     }
 
@@ -591,9 +604,17 @@ namespace Lightbug.CharacterControllerPro.Demo
         {
             if (CharacterActor.IsGrounded)
             {
-                notGroundedJumpsLeft = verticalMovementParameters.availableNotGroundedJumps;
+                if (CharacterActor.WallContacts.Count > 0)
+                {
+                    verticalMovementParameters.availableNotGroundedJumps = Mathf.Clamp(verticalMovementParameters.availableNotGroundedJumps++, 0, 3);
+                    notGroundedJumpsLeft = 1;
+                }
+                else
+                {
+                    notGroundedJumpsLeft = verticalMovementParameters.availableNotGroundedJumps;
 
-                groundedJumpAvailable = true;
+                    groundedJumpAvailable = true;
+                }
             }
 
             if (isAllowedToCancelJump)
@@ -666,9 +687,11 @@ namespace Lightbug.CharacterControllerPro.Demo
                         CharacterActor.Velocity += CustomUtilities.Multiply(jumpDirection, verticalMovementParameters.jumpSpeed);
                         break;
                     case JumpResult.NotGrounded:
+
+                        
                         StartCoroutine(UngroundedJumpLookCoro());
 
-                        CharacterActor.Velocity = (12 * CharacterActor.Up);
+                        CharacterActor.Velocity = (UngroundedJumpVertical * CharacterActor.Up);
                         
                         // Get the direction from the player to the point
                         Vector3 directionToPoint = CharacterActor.WallContact.point - CharacterActor.Position;
@@ -689,7 +712,8 @@ namespace Lightbug.CharacterControllerPro.Demo
 
                         }
                         
-                        CharacterActor.Velocity += rotation * (8 * CharacterActor.WallContact.normal); //+ (Input.GetAxis("Horizontal") * CharacterActor.LocalInputVelocity);
+                        CharacterActor.Velocity += rotation * (UngroundedJumpHorizontal * CharacterActor.WallContact.normal); //+ (Input.GetAxis("Horizontal") * CharacterActor.LocalInputVelocity);
+                        ReduceAirControl(.4f);
                         break;
                     default:
                         break;
@@ -708,7 +732,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         {
             lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
 
-            yield return new WaitForSecondsRealtime(.1f);
+            yield return new WaitForSecondsRealtime(.05f);
 
             lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
         }
