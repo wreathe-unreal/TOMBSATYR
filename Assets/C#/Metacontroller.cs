@@ -8,6 +8,7 @@ using Lightbug.CharacterControllerPro.Implementation;
 using Lightbug.Utilities;
 using UnityEngine;
 using UnityEngine.TextCore.Text;
+using UnityEngine.VFX;
 using Vector3 = UnityEngine.Vector3;
 
 namespace TOMBSATYR
@@ -47,6 +48,7 @@ namespace TOMBSATYR
         private float DefaultJumpSpeed;
         private Contact InitialWallRunContact;
         private bool bCanWallRun = true;
+        public GameObject DustPlume;
         
         private LineRenderer LineRenderer;
 
@@ -278,9 +280,17 @@ namespace TOMBSATYR
 
         private void SpawnPlume(Vector3 obj)
         {
-            if (Controller.Velocity.y > 15f)
+            if (Mathf.Abs(FrameFallVelocity) >= 5f)
             {
-                //spawn plume
+                VisualEffect vfx = DustPlume.GetComponent<VisualEffect>();
+                float smokeSize = .10f + (.015f * (Mathf.Abs(FrameFallVelocity)));
+                float impactForce = 5f + Mathf.Abs(FrameFallVelocity) * 2f;
+                impactForce = Mathf.Clamp(impactForce, 10f, 150f);
+                smokeSize = Mathf.Clamp(smokeSize, .15f, .75f);
+                vfx.SetFloat("SmokeSize", smokeSize);
+                vfx.SetFloat("ImpactForce", impactForce);
+                GameObject dustPlume = Instantiate(DustPlume, Controller.Position, Controller.Rotation);
+                Destroy(dustPlume, 1f);
             }
         }
         
@@ -333,7 +343,7 @@ namespace TOMBSATYR
             HitInfo centerRaycast = new HitInfo();
             Vector3 centerDetection = Controller.Center;
             Vector3 footDetection = Controller.Bottom;
-            
+
             Vector3 wallOffset = new Vector3();
             if (CharacterMovement.wallRunDirection == "LeftWallRun")
             {
@@ -358,7 +368,7 @@ namespace TOMBSATYR
                 footDetection,
                 wallOffset,
                 in ledgeHitInfoFilter);
-            
+
             //
             // LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
             //
@@ -383,14 +393,15 @@ namespace TOMBSATYR
             // lineRenderer.SetPositions(positions);
 
             //wall run exit condition
-            if (!IsRunPressed() || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f) || !footRaycast.hit || !centerRaycast.hit)
+            if (!IsRunPressed() || Mathf.Approximately(PlayerRef.GetNormalizedStamina(), 0f) || !footRaycast.hit ||
+                !centerRaycast.hit)
             {
                 CharacterMovement.TryWallRunning(new Contact());
                 return;
             }
-            
+
             Vector3 wallRunForward = Vector3.Cross(InitialWallRunContact.normal, Vector3.up).normalized;
-            
+
             if (Vector3.Dot(Controller.Forward, wallRunForward) < 0)
             {
                 wallRunForward = -wallRunForward;
@@ -398,7 +409,15 @@ namespace TOMBSATYR
 
             Vector3 controllerPlanar = new Vector3(Controller.Velocity.x, 0f, Controller.Velocity.z);
 
+// Adjust gravity effect
             float newVertical = Controller.Velocity.y - WallRunGravity * Time.deltaTime;
+
+// Limit the vertical velocity to ensure it doesn't go significantly upwards
+            float maxUpwardAngle = Mathf.Sin(Mathf.Deg2Rad * 15f); // Allow a max of 15 degrees upwards
+            if (newVertical > maxUpwardAngle * controllerPlanar.magnitude)
+            {
+                newVertical = maxUpwardAngle * controllerPlanar.magnitude;
+            }
 
             float forwardSpeed = controllerPlanar.magnitude;
 
