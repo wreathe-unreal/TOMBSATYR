@@ -732,7 +732,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         {
             lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
 
-            yield return new WaitForSecondsRealtime(.05f);
+            yield return new WaitForSecondsRealtime(.2f);
 
             lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
         }

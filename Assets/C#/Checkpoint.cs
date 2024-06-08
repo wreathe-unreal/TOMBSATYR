@@ -8,6 +8,7 @@ namespace TOMBSATYR
 {
     public class Checkpoint : Resetpoint
     {
+        public string Name;
         private Gem GemScript;
         private Coroutine RotationCoroutine = null;
         private bool bNoCollision;
@@ -36,6 +37,7 @@ namespace TOMBSATYR
         
         protected override void OnTriggerEnter(Collider other)
         {
+            print("ote");
             base.OnTriggerEnter(other);
             
             CharacterBody playerPhysics = other.GetComponent<CharacterBody>();
@@ -56,7 +58,7 @@ namespace TOMBSATYR
 
         protected override void OnTriggerExit(Collider other)
         {
-
+            print("otx");
             base.OnTriggerEnter(other);
             
             // Check if the colliding object has a Player component

@@ -324,7 +324,7 @@ namespace TOMBSATYR
 
         private void HandleUngroundedJump(int obj)
         {
-            PlayerRef.GhostFX.SetActive(.2f);
+            PlayerRef.GhostFX.SetActive(.5f);
             UngroundedJumpsPerformed++;
         }
 

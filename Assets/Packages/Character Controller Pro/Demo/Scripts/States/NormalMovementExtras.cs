@@ -86,7 +86,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         [Space(10f)]
         
         [Tooltip("How much of an angle to rotate the wall normal vector that pushes the character from a walljump.")]
-        public float ungroundedJumpAngleModifier = 30f;
+        public float ungroundedJumpAngleModifier = 35f;
 
 
         [Tooltip("The gravity magnitude and the jump speed will be automatically calculated based on the jump apex height and duration. Set this to false if you want to manually " +

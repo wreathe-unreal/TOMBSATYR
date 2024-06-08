@@ -171,4 +171,20 @@ namespace TOMBSATYR
             return maxObj;
         }
     }
+    
+    public static class ComponentExtensions
+    {
+        /// <summary>
+        /// Tries to get a component of type T on the specified GameObject.
+        /// </summary>
+        /// <typeparam name="T">The type of component to get.</typeparam>
+        /// <param name="gameObject">The GameObject to check.</param>
+        /// <param name="component">The component if found, otherwise null.</param>
+        /// <returns>True if the component is found, otherwise false.</returns>
+        public static bool TryGetComponent<T>(this GameObject gameObject, out T component) where T : Component
+        {
+            component = gameObject.GetComponent<T>();
+            return component != null;
+        }
+    }
 }
