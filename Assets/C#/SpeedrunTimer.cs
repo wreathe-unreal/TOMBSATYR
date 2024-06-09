@@ -40,7 +40,6 @@ namespace TOMBSATYR
 
         protected void OnTriggerEnter(Collider other)
         {
-            print("ote");
             if (other.gameObject.TryGetComponent<Checkpoint>(out Checkpoint checkpoint))
             {
                 
@@ -90,7 +89,6 @@ namespace TOMBSATYR
 
         protected void OnTriggerExit(Collider other)
         {
-            print("otx");
             if (other.gameObject.TryGetComponent<Checkpoint>(out Checkpoint checkpoint))
             {
                 Times.SetActive(false);

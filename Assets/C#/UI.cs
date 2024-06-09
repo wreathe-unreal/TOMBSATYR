@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Lightbug.CharacterControllerPro.Demo;
+using Lightbug.CharacterControllerPro.Implementation;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,10 +20,13 @@ namespace TOMBSATYR
         public Image FadeToBlackImage;
         private Player PlayerRef;
 
+        public GameObject TutorialsRoot;
+
         private Coroutine FadeCoro = null;
 
         void Start()
         {
+            TutorialsRoot = transform.Find("Tutorials").gameObject;
             // Lock the cursor to the center of the screen
             Cursor.lockState = CursorLockMode.Locked;
 
@@ -39,6 +44,7 @@ namespace TOMBSATYR
         // Update is called once per frame
         void Update()
         {
+            
             if (PlayerRef.GetHealth() != CurrentlyDisplayedHealth)
             {
                 UpdateHealth();
@@ -49,6 +55,25 @@ namespace TOMBSATYR
             {
                 StaminaBar.value = PlayerRef.GetNormalizedStamina();
             }
+        }
+
+        private void ToggleTutorialImages(bool toggle, string inputType)
+        {
+                if (TutorialsRoot == null)
+                {
+                    Debug.LogError("Tutorials root is not assigned.");
+                    return;
+                }
+
+                // Traverse through all child GameObjects of tutorialsRoot
+                foreach (Transform tutorial in TutorialsRoot.transform)
+                {
+                    Transform input = tutorial.Find(inputType);
+                    if (input != null)
+                    {
+                        input.gameObject.SetActive(toggle);
+                    }
+                }
         }
 
         void UpdateHealth()
@@ -107,6 +132,30 @@ namespace TOMBSATYR
 
             FadeToBlackImage.color = new Color(0, 0, 0, endAlpha);
             FadeCoro = null;
+        }
+        
+        public void DisplayTutorial(string tutorialParentName)
+        {
+            GameObject TutorialParent = TutorialsRoot.transform.Find(tutorialParentName).gameObject;
+            TutorialParent.SetActive(true);
+
+            switch (TOMBSATYR_Config.ControlType)
+            {
+                case EInputControlType.MouseKeyboard:
+                    TutorialParent.transform.GetChild(0).gameObject.SetActive(false);
+                    TutorialParent.transform.GetChild(1).gameObject.SetActive(true);
+                    break;
+                default:
+                case EInputControlType.Gamepad:
+                    TutorialParent.transform.GetChild(0).gameObject.SetActive(true);
+                    TutorialParent.transform.GetChild(1).gameObject.SetActive(false);
+                    break;
+            }
+        }
+        
+        public void HideTutorial(string tutorialParentName)
+        {
+            TutorialsRoot.transform.Find(tutorialParentName).gameObject.SetActive(false);
         }
     }
 }

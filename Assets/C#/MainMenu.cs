@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class MainMenu : MonoBehaviour
 {
+    private bool bOptionsMenuOpen = false;
     public List<string> optionText = new List<string> { "PLAY", "OPTIONS", "EXIT"};
     public List<TMP_Text> buttons;
     private int currentIndex = 0;
@@ -13,7 +15,7 @@ public class MainMenu : MonoBehaviour
     private Color deselectedColor = new Color(.196f, .196f, .196f, .77f);
     
     // Cooldown variables
-    private float cooldownTime = 0.5f;
+    private float cooldownTime = 0.25f;
     private float lastInputTime;
 
     void Start()
@@ -32,6 +34,11 @@ public class MainMenu : MonoBehaviour
 
     void Update()
     {
+        if (bOptionsMenuOpen)
+        {
+            return;
+        }
+        
         // Check for cooldown
         if (Time.time - lastInputTime >= cooldownTime)
         {
@@ -72,5 +79,52 @@ public class MainMenu : MonoBehaviour
     {
         buttons[index].color = deselectedColor;
         buttons[index].text = optionText[index];
+    }
+    public void OnPlayClicked()
+    {
+        SceneManager.LoadScene("Scenes/MainScene");
+    }
+
+    public void OnQuitClicked()
+    {
+        Application.Quit();
+        
+        #if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+        #endif
+    }
+
+    
+    
+    
+    public void OnOptionsClicked()
+    {
+        if (Time.time - lastInputTime < cooldownTime)
+        {
+            return;
+        }
+        
+        print("opening options");   
+        bOptionsMenuOpen = true;
+        GameObject screenCanvas = GameObject.Find("ScreenUI");
+        screenCanvas.transform.GetChild(0).gameObject.SetActive(true);
+    }
+
+    
+    public void OnOptionsMenuClosed()
+    {
+        print("on closed");
+        GameObject screenCanvas = GameObject.Find("ScreenUI");
+
+        if (screenCanvas != null)
+        {
+            Transform firstChild = screenCanvas.transform.GetChild(0);
+            if (firstChild != null)
+            {
+                firstChild.gameObject.SetActive(false);
+            }
+        }
+        bOptionsMenuOpen = false;
+        lastInputTime = Time.time;
     }
 }

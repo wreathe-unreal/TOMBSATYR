@@ -13,7 +13,7 @@ using Vector3 = UnityEngine.Vector3;
 
 namespace TOMBSATYR
 {
-
+    
     public class Metacontroller : MonoBehaviour
     {
         private CharacterActor Controller;
@@ -97,9 +97,11 @@ namespace TOMBSATYR
 
         void Update()
         {
+            
             FrameFallVelocity = Controller.Velocity.y;
             FrameMovementOverrides();
         }
+
 
         public bool IsRunPressed()
         {
@@ -111,7 +113,6 @@ namespace TOMBSATYR
             return Input.GetButton("Crouch") || Input.GetAxis("CrouchAxis") > FloatAction.DEADZONE;
         }
         
-        
         private void FrameMovementOverrides()
         {
             SetOverrides();
@@ -120,6 +121,7 @@ namespace TOMBSATYR
             HandleCrouching();
             HandleWallRunning();
             HandleSlide();
+
         }
         
         
