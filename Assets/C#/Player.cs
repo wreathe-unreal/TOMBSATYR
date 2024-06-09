@@ -53,8 +53,8 @@ namespace TOMBSATYR
 
         public EStaminaState StaminaState = EStaminaState.Idle;
         
-        [SerializeField, ReadOnly] private Checkpoint CurrentCheckpoint;
-        [SerializeField, ReadOnly] private Resetpoint CurrentResetpoint;
+        public Checkpoint CurrentCheckpoint;
+        public Resetpoint CurrentResetpoint;
         public Ghost GhostFX;
 
         private NormalMovement CharacterMovement;

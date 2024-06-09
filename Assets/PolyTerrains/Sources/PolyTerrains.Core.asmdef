@@ -1,0 +1,23 @@
+{
+    "name": "PolyTerrains.Core",
+    "rootNamespace": "",
+    "references": [
+        "Unity.Mathematics",
+        "Unity.Burst"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.render-pipelines.high-definition",
+            "expression": "0",
+            "define": "USING_HDRP"
+        }
+    ],
+    "noEngineReferences": false
+}
