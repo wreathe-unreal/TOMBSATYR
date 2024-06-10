@@ -65,6 +65,7 @@ namespace TOMBSATYR
         // Start is called before the first frame update
         void Start()
         {
+            FairyRef = GameObject.FindObjectOfType<Fairy>();
             GhostFX = gameObject.AddComponent<Ghost>();
             CharacterMovement = transform.Find("Controller/States").GetComponent<NormalMovement>();
             ScreenFader = FindObjectOfType<Respawner>();
