@@ -22,6 +22,7 @@ namespace Lightbug.CharacterControllerPro.Implementation
         public FloatAction @crouchaxis;
         public FloatAction @pitch;
         public FloatAction @roll;
+        
 
 
         // Vector2 actions
@@ -141,7 +142,7 @@ namespace Lightbug.CharacterControllerPro.Implementation
             @dash.Update(dt);
             @crouch.Update(dt);
             @runaxis.Update(dt);
-            crouchaxis.Update(dt);
+            @crouchaxis.Update(dt);
 
         }
 

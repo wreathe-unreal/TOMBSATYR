@@ -95,10 +95,13 @@ namespace TOMBSATYR
             //Controller.OnGroundedStateExit += FindNearestResetpoint;
         }
 
+        private void FixedUpdate()
+        {
+            FrameFallVelocity = Controller.Velocity.y;
+        }
+
         void Update()
         {
-            
-            FrameFallVelocity = Controller.Velocity.y;
             FrameMovementOverrides();
         }
 
@@ -268,7 +271,7 @@ namespace TOMBSATYR
             CharacterMovement.verticalMovementParameters.jumpApexDuration += PlayerRef.GetConsumedStaminaRatio() * HighJumpApexDurationMod;
             CharacterMovement.verticalMovementParameters.jumpSpeed += PlayerRef.GetConsumedStaminaRatio() * HighJumpSpeedModifier;
             
-            CharacterMovement.ReduceAirControl(1f);
+            CharacterMovement.ReduceAirControl(.3f * PlayerRef.GetConsumedStaminaRatio());
 
             if (PlayerRef.GetConsumedStamina() > 10f)
             {
@@ -520,13 +523,14 @@ namespace TOMBSATYR
         {
             int fallDamage = (Mathf.Abs(FrameFallVelocity)) switch
             {
-                < 30 => 0,
-                < 40 => -10,
-                < 50 => -12,
-                < 60 => -16,
+                < 20 => 0,
+                < 25 => -10,
+                < 30 => -12,
+                < 35 => -16,
                 _ => -20
             };
 
+            //print(Mathf.Abs(FrameFallVelocity));
             PlayerRef.UpdateHealth(fallDamage);
         }
     }

@@ -233,6 +233,15 @@ namespace Lightbug.CharacterControllerPro.Demo
         public override void CheckExitTransition()
         {
 
+            int triggers = CharacterActor.Triggers.Count;
+            foreach (Trigger t in CharacterActor.Triggers)
+            {
+                if (t.gameObject.CompareTag("Checkpoint") || t.gameObject.CompareTag("Spawn") || t.gameObject.CompareTag("Tutorial"))
+                {
+                    triggers--;
+                }
+            }
+            
             if (CharacterActions.jetPack.value)
             {
                 CharacterStateController.EnqueueTransition<JetPack>();
@@ -241,16 +250,17 @@ namespace Lightbug.CharacterControllerPro.Demo
             {
                 CharacterStateController.EnqueueTransition<Dash>();
             }
-            else if (CharacterActor.Triggers.Count != 0)
+            else if (triggers != 0)
             {
                 CharacterStateController.EnqueueTransition<LadderClimbing>();
                 CharacterStateController.EnqueueTransition<RopeClimbing>();
             }
             else if (!CharacterActor.IsGrounded)
             {
-                if (!CharacterActions.crouch.value && CharacterActions.crouchaxis.value > FloatAction.DEADZONE)
+                if (!CharacterActions.crouch.value)
+                {
                     CharacterStateController.EnqueueTransition<WallSlide>();
-
+                }
                 CharacterStateController.EnqueueTransition<LedgeHanging>();
             }
         }

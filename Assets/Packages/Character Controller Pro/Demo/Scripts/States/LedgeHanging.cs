@@ -154,6 +154,7 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         public override void EnterBehaviour(float dt, CharacterState fromState)
         {
+            
             forceExit = false;
             initialPosition = CharacterActor.Position;
             CharacterActor.alwaysNotGrounded = true;
@@ -181,28 +182,28 @@ namespace Lightbug.CharacterControllerPro.Demo
                 return;
             }
             
-            //
-            // LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
-            //
-            //
-            // if (lineRenderer == null)
-            // {
-            //     lineRenderer = gameObject.AddComponent<LineRenderer>();
-            // }
-            //
-            // lineRenderer.startWidth = 0.1f;
-            // lineRenderer.endWidth = 0.1f;
-            // lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-            // lineRenderer.startColor = Color.red;
-            // lineRenderer.endColor = Color.red;
-            //
-            // // Set the positions of the line
-            // Vector3[] positions = new Vector3[2];
-            // positions[0] = rayCastOrigin;
-            // positions[1] = rayCastOrigin + rayCastDisplacement;
-            //
-            // lineRenderer.positionCount = positions.Length;
-            // lineRenderer.SetPositions(positions);
+            
+            LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
+            
+            
+            if (lineRenderer == null)
+            {
+                lineRenderer = gameObject.AddComponent<LineRenderer>();
+            }
+            
+            lineRenderer.startWidth = 0.1f;
+            lineRenderer.endWidth = 0.1f;
+            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            lineRenderer.startColor = Color.red;
+            lineRenderer.endColor = Color.red;
+            
+            // Set the positions of the line
+                                                             Vector3[] positions = new Vector3[2];
+                                                             positions[0] = rayCastOrigin;
+                                                             positions[1] = rayCastOrigin + rayCastDisplacement;
+                                                             
+                                                             lineRenderer.positionCount = positions.Length;
+                                                             lineRenderer.SetPositions(positions);
 
             Contact wallContact = new Contact(ledgeHitInfo.point, ledgeHitInfo.normal, Vector3.zero, Vector3.zero);
             
@@ -460,6 +461,7 @@ namespace Lightbug.CharacterControllerPro.Demo
                 leftOrigin,
                 -CharacterActor.Up * ledgeDetectionDistance,
                 in ledgeHitInfoFilter
+                
             );
 
             //print("lh:" + leftHitInfo.hit);
@@ -473,7 +475,7 @@ namespace Lightbug.CharacterControllerPro.Demo
             );
             //print("rh:" + rightHitInfo.hit);
 
-
+        
 
 
         }
@@ -504,6 +506,8 @@ namespace Lightbug.CharacterControllerPro.Demo
 
             CustomUtilities.DrawArrowGizmo(leftOrigin, leftOrigin - transform.up * ledgeDetectionDistance, Color.red, 0.15f);
             CustomUtilities.DrawArrowGizmo(rightOrigin, rightOrigin - transform.up * ledgeDetectionDistance, Color.red, 0.15f);
+            
+            // for keeping player off the ledge
             // Vector3 rayCastOrigin = CharacterActor.Top - CharacterActor.Up * .29f;
             // Vector3 rayCastDisplacement = CharacterActor.Forward * 0.8f;
             // CustomUtilities.DrawArrowGizmo(rayCastOrigin, rayCastOrigin + rayCastDisplacement, Color.blue, .15f);

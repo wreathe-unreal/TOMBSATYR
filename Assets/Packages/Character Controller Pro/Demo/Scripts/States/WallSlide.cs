@@ -87,16 +87,27 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         public override void CheckExitTransition()
         {
-            if (CharacterActions.crouch.value 
-                || CharacterActions.crouchaxis.value > FloatAction.DEADZONE || 
-                CharacterActor.IsGrounded || !CharacterActor.WallCollision || !CheckCenterRay())
+            if (CharacterActor.IsGrounded)
+            {
+                print("grounded");
+            }
+
+            if (!CharacterActor.WallCollision)
+            {
+                print("no collision");
+            }
+
+            if (!CheckCenterRay())
+            {
+                print("no center ray");
+            }
+            if (CharacterActions.crouch.value || CharacterActions.crouchaxis.value > FloatAction.DEADZONE || CharacterActor.IsGrounded || !CharacterActor.WallCollision)// || !CheckCenterRay())
             {
                 CharacterStateController.EnqueueTransition<NormalMovement>();
             }
             else if (CharacterActions.jump.Started)
             {
                 wallJump = true;
-
                 CharacterStateController.EnqueueTransition<NormalMovement>();
             }
             else
@@ -109,17 +120,27 @@ namespace Lightbug.CharacterControllerPro.Demo
         public override bool CheckEnterTransition(CharacterState fromState)
         {
             if (CharacterActor.IsAscending)
+            {
                 return false;
+            }
 
             if (!CharacterActor.WallCollision)
+            {
                 return false;
+            }
 
             if (filterByTag)
+            {
                 if (!CharacterActor.WallContact.gameObject.CompareTag(wallTag))
+                {
                     return false;
+                }   
+            }
 
             if (!CheckCenterRay())
+            {
                 return false;
+            }
 
 
             return true;
@@ -139,7 +160,29 @@ namespace Lightbug.CharacterControllerPro.Demo
                 -CharacterActor.WallContact.normal * 1.2f * CharacterActor.BodySize.x,
                 in filter
             );
-
+            //
+            // LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
+            //
+            //
+            // if (lineRenderer == null)
+            // {
+            //     lineRenderer = gameObject.AddComponent<LineRenderer>();
+            // }
+            //
+            // lineRenderer.startWidth = 0.1f;
+            // lineRenderer.endWidth = 0.1f;
+            // lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            // lineRenderer.startColor = Color.red;
+            // lineRenderer.endColor = Color.red;
+            //
+            // // Set the positions of the line
+            // Vector3[] positions = new Vector3[2];
+            // positions[0] = rayCastOrigin;
+            // positions[1] = rayCastOrigin + rayCastDisplacement;
+            //
+            // lineRenderer.positionCount = positions.Length;
+            // lineRenderer.SetPositions(positions);
+            
             return centerRayHitInfo.hit && centerRayHitInfo.transform.gameObject == CharacterActor.WallContact.gameObject;
         }
 
@@ -147,6 +190,7 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         public override void EnterBehaviour(float dt, CharacterState fromState)
         {
+            print("entering");
             CharacterActor.UseRootMotion = false;
 
             CharacterActor.Velocity *= initialIntertia;
@@ -161,6 +205,7 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         public override void ExitBehaviour(float dt, CharacterState toState)
         {
+            print("exiting");
             if (wallJump)
             {
                 wallJump = false;

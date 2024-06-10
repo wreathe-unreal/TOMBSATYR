@@ -128,6 +128,8 @@ namespace Lightbug.CharacterControllerPro.Demo
         Vector3 characterPosition = default(Vector3);
         float lerpedHeight;
 
+        public bool bGamepad = true;
+
         public enum CameraMode
         {
             FirstPerson,
@@ -237,7 +239,15 @@ namespace Lightbug.CharacterControllerPro.Demo
             // An input axis value (e.g. mouse x) usually gets accumulated over time. So, the higher the frame rate the smaller the value returned.
             // In order to prevent inconsistencies due to frame rate changes, the camera movement uses a fixed delta time, instead of the old regular
             // delta time.
-            float dt = Time.fixedDeltaTime;
+            float dt;
+            if (bGamepad)
+            {
+                dt = Time.deltaTime;
+            }
+            else
+            {
+                dt = Time.fixedDeltaTime;
+            }
 
             UpdateCamera(dt);
         }

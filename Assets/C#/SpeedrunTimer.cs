@@ -49,17 +49,17 @@ namespace TOMBSATYR
                 TMP_CheckpointName.text = checkpoint.Name;
                 TMP_SpeedrunTimes.text = GetTimes(checkpoint.Name);
                 
-                if (checkpoint == StartCheckpoint)
+                if (StartCheckpoint == null || checkpoint == StartCheckpoint)
                 {
                     return;
                 }
                 
                 bActive = false;
-                LastRun.Destination = checkpoint.Name;
+                LastRun.Destination = StartCheckpoint.Name;
                 LastRun.Time = Timer;
 
                 RunTime newTime;
-                newTime.Destination = checkpoint.Name;
+                newTime.Destination = StartCheckpoint.Name;
                 newTime.Time = Timer;
                 
                 bool bTimeFound = false;

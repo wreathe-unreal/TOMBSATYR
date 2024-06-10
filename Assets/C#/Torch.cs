@@ -72,6 +72,7 @@ namespace TOMBSATYR
                 // Enable the Torchlight GameObject
                 torchlight.SetActive(true);
                 smolder.SetActive(false);
+                transform.GetComponent<CapsuleCollider>().enabled = false;
             }
 
             // Get the first nested Light component in the children of the game object
