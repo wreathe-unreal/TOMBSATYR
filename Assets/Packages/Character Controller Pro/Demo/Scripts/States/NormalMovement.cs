@@ -518,7 +518,7 @@ namespace Lightbug.CharacterControllerPro.Demo
                     break;
                 case CharacterActorState.UnstableGrounded:
 
-                    if (CharacterActions.jump.StartedElapsedTime <= verticalMovementParameters.preGroundedJumpTime && verticalMovementParameters.canJumpOnUnstableGround)
+                    if (CharacterActions.jump.StartedElapsedTime <= verticalMovementParameters.preGroundedJumpTime && verticalMovementParameters.canJumpOnUnstableGround && CharacterActor.WasStable)
                         jumpResult = JumpResult.Grounded;
 
                     break;

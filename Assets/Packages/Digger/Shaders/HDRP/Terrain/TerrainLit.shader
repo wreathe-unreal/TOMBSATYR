@@ -1,4 +1,4 @@
-Shader "Digger/HDRP/TerrainLit"
+    Shader "Digger/HDRP/TerrainLit"
 {
     Properties
     {
