@@ -18,7 +18,6 @@ public class MainMenu : MonoBehaviour
     private float cooldownTime = 0.25f;
     private float lastInputTime;
 
-    public  System.Action OnBackPressed;
     public  System.Action OnQuitPressed;
     public  System.Action OnElementSelected;
 

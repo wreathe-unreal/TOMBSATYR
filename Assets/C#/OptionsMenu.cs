@@ -25,6 +25,9 @@ public class OptionsMenu : MonoBehaviour
 
     public Button SelectedButton;
     
+    public  System.Action OnBackPressed;
+
+    
     void Start()
     {
         MainMenu = FindObjectOfType<MainMenu>();
@@ -121,6 +124,7 @@ public class OptionsMenu : MonoBehaviour
     
     public void OnBackClicked()
     {
+        OnBackPressed?.Invoke();
         MainMenu.OnOptionsMenuClosed();
     }
 

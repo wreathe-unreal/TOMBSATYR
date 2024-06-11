@@ -74,10 +74,10 @@ namespace TOMBSATYR
         {
             if (FairyState == EFairyState.Moving)
             {
-                print("fairy moving");
-                print("boids origin:" + BoidsController.GetOrigin().name);
-                print("boids origin is not orbitlocation:" + (BoidsController.GetOrigin() != OrbitLocation).ToString());
-                print("boids origin has torch:" + BoidsController.GetOrigin().GetComponent<Torch>() != null);
+                // print("fairy moving");
+                // print("boids origin:" + BoidsController.GetOrigin().name);
+                // print("boids origin is not orbitlocation:" + (BoidsController.GetOrigin() != OrbitLocation).ToString());
+                // print("boids origin has torch:" + BoidsController.GetOrigin().GetComponent<Torch>() != null);
                 if (BoidsController.GetOrigin() != OrbitLocation && BoidsController.GetOrigin().GetComponent<Torch>() != null)
                 {
                     if (Vector3.Distance(transform.position, BoidsController.GetOrigin().transform.position) <=

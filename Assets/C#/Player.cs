@@ -384,11 +384,11 @@ namespace TOMBSATYR
 
             List<Torch> foundTorches = Utils.FindObjects<Torch>((obj) =>
             {
-                print(obj.gameObject.name);
-                print("not lit:" + !obj.bLit);
-                print("is near player:" + IsNearPlayer(obj.gameObject, TorchSearchRadius));
-                print("is in view:" + Camera.main.IsInView(obj.gameObject, SendFairyAngle));
-                print("is unobstructed" + Camera.main.IsUnobstructed(obj.gameObject));
+                // print(obj.gameObject.name);
+                // print("not lit:" + !obj.bLit);
+                // print("is near player:" + IsNearPlayer(obj.gameObject, TorchSearchRadius));
+                // print("is in view:" + Camera.main.IsInView(obj.gameObject, SendFairyAngle));
+                // print("is unobstructed" + Camera.main.IsUnobstructed(obj.gameObject));
                 return !obj.bLit && IsNearPlayer(obj.gameObject, TorchSearchRadius)
                                  && Camera.main.IsInView(obj.gameObject, SendFairyAngle)
                                  && Camera.main.IsUnobstructed(obj.gameObject);

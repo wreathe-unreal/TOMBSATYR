@@ -21,12 +21,13 @@ namespace TOMBSATYR
         public List<RunTime> SpeedrunTimes = new List<RunTime>(); // Initialize the list
         private TextMeshProUGUI TMP_CheckpointName;
         private TextMeshProUGUI TMP_SpeedrunTimes;
+        private Coroutine TextFade;
         
         // Start is called before the first frame update
         void Start()
         {
-            TMP_CheckpointName = Times.transform.GetChild(0).gameObject.GetComponent<TextMeshProUGUI>();
-            TMP_SpeedrunTimes = Times.transform.GetChild(1).gameObject.GetComponent<TextMeshProUGUI>();
+            TMP_SpeedrunTimes = Times.transform.GetChild(0).gameObject.GetComponent<TextMeshProUGUI>();
+            TMP_CheckpointName = Times.transform.GetChild(1).gameObject.GetComponent<TextMeshProUGUI>();
         }
 
         // Update is called once per frame
@@ -40,10 +41,20 @@ namespace TOMBSATYR
 
         protected void OnTriggerEnter(Collider other)
         {
+
+            
             if (other.gameObject.TryGetComponent<Checkpoint>(out Checkpoint checkpoint))
             {
+                if (TextFade != null)
+                {
+                    Times.transform.GetChild(1).gameObject.SetActive(true);
+                    TextMeshProUGUI textMesh = Times.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+                    Color originalColor = textMesh.color;
+                    textMesh.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f);
+                    StopCoroutine(TextFade);
+                }
                 
-                
+                // Disable the full Times object
                 Times.SetActive(true);
                 
                 TMP_CheckpointName.text = checkpoint.Name;
@@ -91,10 +102,50 @@ namespace TOMBSATYR
         {
             if (other.gameObject.TryGetComponent<Checkpoint>(out Checkpoint checkpoint))
             {
-                Times.SetActive(false);
+                Times.transform.GetChild(0).gameObject.SetActive(false);
+
+                HandleCoroutine();
                 StartCheckpoint = checkpoint;
                 bActive = true;
             }
+        }
+
+        private void HandleCoroutine()
+        {
+            if (TextFade == null)
+            {
+                TextFade = StartCoroutine(FadeAndActivateText());
+            }
+        }
+        
+        private IEnumerator FadeAndActivateText()
+        {
+            // Get the TextMeshPro component from the child
+            TextMeshProUGUI textMesh = Times.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
+            // Ensure the textMesh object is active before starting the fade
+            textMesh.gameObject.SetActive(true);
+
+            // Fade out the text
+            float elapsedTime = 0f;
+            Color originalColor = textMesh.color;
+
+            while (elapsedTime < 2f) //fade duration
+            {
+                float alpha = Mathf.Lerp(1f, 0f, elapsedTime / 2f); //fade duration
+                textMesh.color = new Color(originalColor.r, originalColor.g, originalColor.b, alpha);
+                elapsedTime += Time.deltaTime;
+                yield return null;
+            }
+
+            // Ensure the alpha is set to 0
+            textMesh.color = new Color(originalColor.r, originalColor.g, originalColor.b, 0f);
+
+            // Set the text object to active and reset alpha to 1
+            textMesh.gameObject.SetActive(true);
+            textMesh.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f);
+
+            // Disable the full Times object
+            Times.gameObject.SetActive(false);
         }
         
         public static string FormatTime(float timeInSeconds)
@@ -115,6 +166,11 @@ namespace TOMBSATYR
                 {
                     TimesText += "( " + time.Destination + " ) :: " + FormatTime(time.Time) + "\n"; // Format the time for better readability
                 }
+            }
+
+            if (TimesText == "")
+            {
+                TimesText = "No times for this checkpoint.";
             }
 
             return TimesText;
