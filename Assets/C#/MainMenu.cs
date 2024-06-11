@@ -18,6 +18,13 @@ public class MainMenu : MonoBehaviour
     private float cooldownTime = 0.25f;
     private float lastInputTime;
 
+    public  System.Action OnBackPressed;
+    public  System.Action OnQuitPressed;
+    public  System.Action OnElementSelected;
+
+
+
+
     void Start()
     {
         // Initialize button colors
@@ -62,7 +69,7 @@ public class MainMenu : MonoBehaviour
             }
         }
 
-        if (Input.GetButtonDown("Fire1"))
+        if (Input.GetButtonDown("Fire1") || Input.GetButtonDown("Jump"))
         {
             // Simulate button press
             buttons[currentIndex].GetComponentInParent<Button>().onClick.Invoke();
@@ -73,6 +80,8 @@ public class MainMenu : MonoBehaviour
     {
         buttons[index].color = selectedColor;
         buttons[index].text = "( " + optionText[index] + " )";
+        OnElementSelected?.Invoke();
+
     }
 
     void DeselectButton(int index)
@@ -87,6 +96,7 @@ public class MainMenu : MonoBehaviour
 
     public void OnQuitClicked()
     {
+        OnQuitPressed?.Invoke();
         Application.Quit();
         
         #if UNITY_EDITOR

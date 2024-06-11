@@ -54,7 +54,9 @@ namespace TOMBSATYR
         
         private LineRenderer LineRenderer;
 
-        
+        public System.Action<float> OnHighJumpPerformed;
+        public System.Action<float> OnLongJumpPerformed;
+        public System.Action OnWallJumpPerformed;
 
 
         void Start()
@@ -272,11 +274,14 @@ namespace TOMBSATYR
             CharacterMovement.verticalMovementParameters.jumpSpeed += PlayerRef.GetConsumedStaminaRatio() * HighJumpSpeedModifier;
             
             CharacterMovement.ReduceAirControl(.3f * PlayerRef.GetConsumedStaminaRatio());
+            
 
             if (PlayerRef.GetConsumedStamina() > 10f)
             {
                 PlayerRef.GhostFX.SetActive(.75f);
             }
+
+            OnHighJumpPerformed?.Invoke(PlayerRef.GetConsumedStaminaRatio());
             
             CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
         }
@@ -330,6 +335,7 @@ namespace TOMBSATYR
         private void HandleUngroundedJump(int obj)
         {
             PlayerRef.GhostFX.SetActive(.5f);
+            OnWallJumpPerformed?.Invoke();
             UngroundedJumpsPerformed++;
         }
 
@@ -510,9 +516,11 @@ namespace TOMBSATYR
             
             PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude, true, true);
 
+            OnLongJumpPerformed?.Invoke(PlayerRef.GetConsumedStaminaRatio());
+            
             if (PlayerRef.GetConsumedStamina() > 10f)
             {
-                PlayerRef.GhostFX.SetActive(.75f);
+                PlayerRef.GhostFX.SetActive(PlayerRef.GetConsumedStaminaRatio()/ 1f * 1f);
                 CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
             }
             

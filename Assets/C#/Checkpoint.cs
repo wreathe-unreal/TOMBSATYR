@@ -12,8 +12,9 @@ namespace TOMBSATYR
         private Gem GemScript;
         private Coroutine RotationCoroutine = null;
         private bool bNoCollision;
+        public static System.Action<Checkpoint> OnCheckpointCollision;
 
-        
+
         protected override void Awake()
         {
             
@@ -81,4 +82,5 @@ namespace TOMBSATYR
         }
         
     }
+
 }

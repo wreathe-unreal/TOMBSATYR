@@ -175,7 +175,7 @@ namespace TOMBSATYR
 
             
             // Calculate the new rotation while keeping the bird upright
-            Quaternion lookRotation = Quaternion.LookRotation(Velocity);
+            Quaternion lookRotation = Quaternion.LookRotation(Velocity);    
             Quaternion uprightRotation = Quaternion.Euler(0, lookRotation.eulerAngles.y, 0); // Keep the bird upright
 
             // Blend between the two rotations

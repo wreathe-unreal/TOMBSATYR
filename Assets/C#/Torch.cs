@@ -8,6 +8,7 @@ namespace TOMBSATYR
     {
         public bool bStartLit;
         public bool bLit = false;
+        public static System.Action<Torch> OnTorchLit;
 
         // Start is called before the first frame update
         void Start()
@@ -56,6 +57,7 @@ namespace TOMBSATYR
         public void Light()
         {
             bLit = true;
+            OnTorchLit?.Invoke(this);
 
             // Find the child GameObject named "Torchlight"
             Transform torchlightTransform = transform.Find("Torchlight");

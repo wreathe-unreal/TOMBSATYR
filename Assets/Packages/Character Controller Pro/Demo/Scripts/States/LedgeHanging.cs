@@ -85,8 +85,12 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         [SerializeField] protected string traverseLeft = "traverseDirection";
 
+        private NormalMovement CharacterMovement;
 
 
+
+        public System.Action OnTopUpPerformed;
+        
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
         // ─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
         protected const float MaxLedgeVerticalAngle = 50f;
@@ -299,6 +303,7 @@ namespace Lightbug.CharacterControllerPro.Demo
 
 
                             CharacterActor.Animator.SetTrigger(topUpParameter);
+                            OnTopUpPerformed?.Invoke();
                         }
 
 

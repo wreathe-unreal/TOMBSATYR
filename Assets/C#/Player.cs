@@ -61,7 +61,8 @@ namespace TOMBSATYR
 
 
         private bool bHighJumpExit = false;
-        
+
+        public System.Action<bool> OnTeleport; //true if player is alive
 
         // Start is called before the first frame update
         void Start()
@@ -72,6 +73,7 @@ namespace TOMBSATYR
             ScreenFader = FindObjectOfType<Respawner>();
             Health = HEALTH_MAX;
             Stamina = STAMINA_MAX;
+            Checkpoint.OnCheckpointCollision += OnEnterCheckpoint;
         }
 
 
@@ -333,6 +335,15 @@ namespace TOMBSATYR
             CurrentCheckpoint = checkpoint;
             CurrentResetpoint = (Resetpoint)checkpoint;
 
+            if (Health == 0)
+            {
+                OnTeleport?.Invoke(false);
+            }
+            else
+            {
+                OnTeleport?.Invoke(true);
+            }
+            
             Controller.Teleport(CurrentCheckpoint.GetSpawn().position, CurrentCheckpoint.GetSpawn().rotation);
             Health = HEALTH_MAX;
             Stamina = STAMINA_MAX;
@@ -373,6 +384,11 @@ namespace TOMBSATYR
 
             List<Torch> foundTorches = Utils.FindObjects<Torch>((obj) =>
             {
+                print(obj.gameObject.name);
+                print("not lit:" + !obj.bLit);
+                print("is near player:" + IsNearPlayer(obj.gameObject, TorchSearchRadius));
+                print("is in view:" + Camera.main.IsInView(obj.gameObject, SendFairyAngle));
+                print("is unobstructed" + Camera.main.IsUnobstructed(obj.gameObject));
                 return !obj.bLit && IsNearPlayer(obj.gameObject, TorchSearchRadius)
                                  && Camera.main.IsInView(obj.gameObject, SendFairyAngle)
                                  && Camera.main.IsUnobstructed(obj.gameObject);

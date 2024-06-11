@@ -81,6 +81,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         /// </summary>
         public event System.Action<int> OnNotGroundedJumpPerformed;
 
+
         #endregion
         
         protected MaterialController materialController = null;
@@ -1014,5 +1015,6 @@ namespace Lightbug.CharacterControllerPro.Demo
             bInteractTriggerSet = false;
             
         }
+
     }
 }

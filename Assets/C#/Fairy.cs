@@ -23,6 +23,8 @@ namespace TOMBSATYR
         private Player PlayerRef;
         private bool bUnstuckCoroActive;
 
+        public System.Action OnUnstuck;
+
         void Start()
         {
 
@@ -72,8 +74,11 @@ namespace TOMBSATYR
         {
             if (FairyState == EFairyState.Moving)
             {
-                if (BoidsController.GetOrigin() != OrbitLocation &&
-                    BoidsController.GetOrigin().GetComponent<Torch>() != null)
+                print("fairy moving");
+                print("boids origin:" + BoidsController.GetOrigin().name);
+                print("boids origin is not orbitlocation:" + (BoidsController.GetOrigin() != OrbitLocation).ToString());
+                print("boids origin has torch:" + BoidsController.GetOrigin().GetComponent<Torch>() != null);
+                if (BoidsController.GetOrigin() != OrbitLocation && BoidsController.GetOrigin().GetComponent<Torch>() != null)
                 {
                     if (Vector3.Distance(transform.position, BoidsController.GetOrigin().transform.position) <=
                         TorchActivationRange)
@@ -138,7 +143,7 @@ namespace TOMBSATYR
         IEnumerator Unstuck()
         {
             bUnstuckCoroActive = true;
-
+            
             // Wait for 6 seconds
             yield return new WaitForSeconds(6.0f);
 
@@ -146,6 +151,7 @@ namespace TOMBSATYR
             if (FairyState == EFairyState.Idle &&
                 Vector3.Distance(PlayerRef.Controller.transform.position, transform.position) > 15f)
             {
+                OnUnstuck?.Invoke();
                 TeleportToPlayer();
             }
 
