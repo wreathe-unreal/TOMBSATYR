@@ -11,13 +11,22 @@ namespace Lightbug.CharacterControllerPro.Demo
     [DefaultExecutionOrder(ExecutionOrder.CharacterGraphicsOrder + 100)]  // <--- Do your job after everything else
     public class Camera3D : MonoBehaviour
     {
+        
+        
+        [Header("Sensitivity")]
+        public bool bGamepad = true;
+
+        public float GamepadSensitivity { get; set; } = 5f;
+        
         [Header("Inputs")]
 
         [SerializeField]
         InputHandlerSettings inputHandlerSettings = new InputHandlerSettings();
 
         [SerializeField]
-        string axes = "Camera";
+        string mouseAxes = "Camera";
+        string gamepadAxes = "Gamepad Camera";
+
 
         [SerializeField]
         string zoomAxis = "Camera Zoom";
@@ -128,7 +137,6 @@ namespace Lightbug.CharacterControllerPro.Demo
         Vector3 characterPosition = default(Vector3);
         float lerpedHeight;
 
-        public bool bGamepad = true;
 
         public enum CameraMode
         {
@@ -219,19 +227,32 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         void Update()
         {
+            
+        }
+        void FixedUpdate()
+        {
             if (targetTransform == null)
             {
                 this.enabled = false;
                 return;
             }
 
-            Vector2 cameraAxes = inputHandlerSettings.InputHandler.GetVector2(axes);
+            Vector2 gamepadData = inputHandlerSettings.InputHandler.GetVector2(gamepadAxes);
 
+            Vector2 mouseData = inputHandlerSettings.InputHandler.GetVector2(mouseAxes);
+
+            gamepadData *= GamepadSensitivity;
+            
             if (updatePitch)
-                deltaPitch = -cameraAxes.y;
+            {
+                deltaPitch = Mathf.Abs(gamepadData.y) > Mathf.Abs(mouseData.y) ? -gamepadData.y : -mouseData.y;
+            }
 
             if (updateYaw)
-                deltaYaw = cameraAxes.x;
+            {
+                deltaYaw = Mathf.Abs(gamepadData.x) > Mathf.Abs(mouseData.x) ? gamepadData.x : mouseData.x;
+
+            }
 
             if (updateZoom)
                 deltaZoom = -inputHandlerSettings.InputHandler.GetFloat(zoomAxis);
@@ -239,17 +260,7 @@ namespace Lightbug.CharacterControllerPro.Demo
             // An input axis value (e.g. mouse x) usually gets accumulated over time. So, the higher the frame rate the smaller the value returned.
             // In order to prevent inconsistencies due to frame rate changes, the camera movement uses a fixed delta time, instead of the old regular
             // delta time.
-            float dt;
-            if (bGamepad)
-            {
-                dt = Time.deltaTime;
-            }
-            else
-            {
-                dt = Time.fixedDeltaTime;
-            }
-
-            UpdateCamera(dt);
+            UpdateCamera(Time.fixedDeltaTime);
         }
 
 
