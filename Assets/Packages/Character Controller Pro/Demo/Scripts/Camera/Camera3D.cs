@@ -279,8 +279,7 @@ namespace Lightbug.CharacterControllerPro.Demo
 
             viewReference.rotation = targetTransform.rotation * Quaternion.AngleAxis(90, Vector3.up);
             viewReference.Rotate(Vector3.right, initialPitch);
-            
-            
+                
             transform.rotation = viewReference.rotation;
 
             lerpedCharacterUp = characterActor.Up;

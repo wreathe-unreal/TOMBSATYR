@@ -488,17 +488,16 @@ namespace Lightbug.CharacterControllerPro.Demo
 
             if (!verticalMovementParameters.canJump)
                 return jumpResult;
-
-            if (isCrouched)
-                return JumpResult.Grounded;
-
-
+            
             switch (CharacterActor.CurrentState)
             {
                 case CharacterActorState.StableGrounded:
 
                     if (CharacterActions.jump.StartedElapsedTime <= verticalMovementParameters.preGroundedJumpTime && groundedJumpAvailable)
                         jumpResult = JumpResult.Grounded;
+                    
+                    // if (isCrouched)
+                    //     return JumpResult.Grounded;
 
                     break;
                 case CharacterActorState.NotGrounded:

@@ -186,28 +186,28 @@ namespace Lightbug.CharacterControllerPro.Demo
                 return;
             }
             
-            
-            LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
-            
-            
-            if (lineRenderer == null)
-            {
-                lineRenderer = gameObject.AddComponent<LineRenderer>();
-            }
-            
-            lineRenderer.startWidth = 0.1f;
-            lineRenderer.endWidth = 0.1f;
-            lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
-            lineRenderer.startColor = Color.red;
-            lineRenderer.endColor = Color.red;
-            
-            // Set the positions of the line
-                                                             Vector3[] positions = new Vector3[2];
-                                                             positions[0] = rayCastOrigin;
-                                                             positions[1] = rayCastOrigin + rayCastDisplacement;
-                                                             
-                                                             lineRenderer.positionCount = positions.Length;
-                                                             lineRenderer.SetPositions(positions);
+            //
+            // LineRenderer lineRenderer = gameObject.GetComponent<LineRenderer>();
+            //
+            //
+            // if (lineRenderer == null)
+            // {
+            //     lineRenderer = gameObject.AddComponent<LineRenderer>();
+            // }
+            //
+            // lineRenderer.startWidth = 0.1f;
+            // lineRenderer.endWidth = 0.1f;
+            // lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+            // lineRenderer.startColor = Color.red;
+            // lineRenderer.endColor = Color.red;
+            //
+            // // Set the positions of the line
+            //  Vector3[] positions = new Vector3[2];
+            //  positions[0] = rayCastOrigin;
+            //  positions[1] = rayCastOrigin + rayCastDisplacement;
+            //  
+            //  lineRenderer.positionCount = positions.Length;
+            //  lineRenderer.SetPositions(positions);
 
             Contact wallContact = new Contact(ledgeHitInfo.point, ledgeHitInfo.normal, Vector3.zero, Vector3.zero);
             

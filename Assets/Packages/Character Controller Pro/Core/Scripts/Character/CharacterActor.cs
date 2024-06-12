@@ -1031,6 +1031,11 @@ namespace Lightbug.CharacterControllerPro.Core
             {
                 Contact contact = Contacts[i];
 
+                if (contact.gameObject.layer == 10) //Invisible Wall
+                {
+                    continue;
+                }
+
                 float verticalAngle = Vector3.Angle(Up, contact.normal);
 
                 if (CustomUtilities.isCloseTo(verticalAngle, 90f, CharacterConstants.WallContactAngleTolerance))

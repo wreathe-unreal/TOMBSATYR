@@ -36,7 +36,7 @@ namespace TOMBSATYR
 
         private void OnTriggerEnter(Collider other)
         {
-            if (other.GetComponent<CharacterActor>() != null)
+            if (other.GetComponent<CharacterActor>() != null && !other.GetComponent<CharacterActor>().IsAscending)
             {
                 PlayerRef.UpdateHealth(-Damage);
             }
