@@ -37,8 +37,10 @@ namespace TOMBSATYR
         public const int HEALTH_MIN = 0;
         
         [SerializeField, ReadOnly] private float Stamina;
+        
         public const int STAMINA_MAX = 20;
         public const int STAMINA_MIN = 0;
+        public float UngroundedJumpStaminaDrain = 15f;
         public float WallRunStaminaDrain = .2f;
         public float HighJumpStaminaDrain = 30f;
         public float SprintStaminaDrain = 15f;
@@ -308,6 +310,11 @@ namespace TOMBSATYR
             ScreenFader.Respawn(ERespawnType.GameOver, (Resetpoint)GetCurrentCheckpoint());
         }
 
+        public void ModifyStamina(float modifier)
+        {
+            Stamina = Mathf.Clamp(Stamina + modifier, STAMINA_MIN, STAMINA_MAX);
+        }
+
         public int GetHealth()
         {
             return Health;
@@ -448,5 +455,12 @@ namespace TOMBSATYR
             StaminaConsumed = 0f;
         }
 
+
+        public float GetStamina()
+        {
+            return Stamina;
+        }
+        
+        
     }
 }

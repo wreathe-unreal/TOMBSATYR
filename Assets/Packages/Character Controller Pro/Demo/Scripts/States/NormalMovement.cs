@@ -697,34 +697,30 @@ namespace Lightbug.CharacterControllerPro.Demo
                         CharacterActor.Velocity += CustomUtilities.Multiply(jumpDirection, verticalMovementParameters.jumpSpeed);
                         break;
                     case JumpResult.NotGrounded:
-
-                        
                         StartCoroutine(UngroundedJumpLookCoro());
 
-                        CharacterActor.Velocity = (UngroundedJumpVertical * CharacterActor.Up);
-                        
-                        // Get the direction from the player to the point
-                        Vector3 directionToPoint = CharacterActor.WallContact.point - CharacterActor.Position;
+                        // Calculate the initial vertical velocity for the jump
+                        Vector3 verticalVelocity = UngroundedJumpVertical * CharacterActor.Up;
 
-                        // Compute the dot product with the player's right vector
-                        float dotProduct = Vector3.Dot(CharacterActor.Right, directionToPoint);
-                        
-                        Quaternion rotation = Quaternion.identity;
-                        // Determine the side based on the sign of the dot product
-                        if (dotProduct > 0)
-                        {
-                            rotation = Quaternion.AngleAxis(verticalMovementParameters.ungroundedJumpAngleModifier, CharacterActor.Up);
+                        // Get the wall normal
+                        Vector3 wallNormal = CharacterActor.WallContact.normal;
 
-                        }
-                        else if (dotProduct < 0)
-                        {
-                            rotation = Quaternion.AngleAxis(-verticalMovementParameters.ungroundedJumpAngleModifier, CharacterActor.Up);
+                        // Get the current horizontal velocity of the player
+                        Vector3 currentHorizontalVelocity = CharacterActor.Velocity - Vector3.Project(CharacterActor.Velocity, CharacterActor.Up);
 
-                        }
-                        
-                        CharacterActor.Velocity += rotation * (UngroundedJumpHorizontal * CharacterActor.WallContact.normal); //+ (Input.GetAxis("Horizontal") * CharacterActor.LocalInputVelocity);
-                        ReduceAirControl(.4f);
+                        // Reflect the current horizontal velocity across the wall normal
+                        Vector3 reflectedHorizontalVelocity = Vector3.Reflect(currentHorizontalVelocity, wallNormal);
+
+                        // Combine the vertical and reflected horizontal velocities
+                        CharacterActor.Velocity = reflectedHorizontalVelocity + verticalVelocity;
+
+                        // Optionally, add some force away from the wall to ensure the character doesn't stick to it
+                        CharacterActor.Velocity += wallNormal * UngroundedJumpHorizontal;
+
+                        // Reduce air control to prevent immediate direction change
+                        ReduceAirControl(0.3f);
                         break;
+
                     default:
                         break;
                 }
@@ -742,7 +738,7 @@ namespace Lightbug.CharacterControllerPro.Demo
         {
             lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
 
-            yield return new WaitForSecondsRealtime(.2f);
+            yield return new WaitForSecondsRealtime(.25f);
 
             lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Input;
         }

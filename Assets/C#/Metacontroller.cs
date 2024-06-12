@@ -352,6 +352,9 @@ namespace TOMBSATYR
 
         private void HandleUngroundedJump(int obj)
         {
+            print(PlayerRef.GetStamina());
+            PlayerRef.ModifyStamina(-3f);
+            print(PlayerRef.GetStamina());
             PlayerRef.GhostFX.SetActive(.5f);
             OnWallJumpPerformed?.Invoke();
             UngroundedJumpsPerformed++;
@@ -507,7 +510,7 @@ namespace TOMBSATYR
             }
 
             
-            if (UngroundedJumpsPerformed >= 3)
+            if (UngroundedJumpsPerformed >= 3 || PlayerRef.GetStamina() < 3f)
             {
                 CharacterMovement.verticalMovementParameters.availableNotGroundedJumps = 0;
                 CharacterMovement.notGroundedJumpsLeft = 0;
