@@ -7,6 +7,7 @@ namespace TOMBSATYR
 {
     public struct RunTime
     {
+        public string Start;
         public string Destination;
         public float Time;
     }
@@ -45,38 +46,37 @@ namespace TOMBSATYR
             
             if (other.gameObject.TryGetComponent<Checkpoint>(out Checkpoint checkpoint))
             {
+                bActive = false;
+
                 if (TextFade != null)
                 {
-                    Times.transform.GetChild(1).gameObject.SetActive(true);
-                    TextMeshProUGUI textMesh = Times.transform.GetChild(1).GetComponent<TextMeshProUGUI>();
-                    Color originalColor = textMesh.color;
-                    textMesh.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f);
                     StopCoroutine(TextFade);
+                    TMP_CheckpointName.gameObject.SetActive(true);
+                    Color originalColor = TMP_CheckpointName.color;
+                    TMP_CheckpointName.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1f);
                 }
                 
-                // Disable the full Times object
                 Times.SetActive(true);
                 
                 TMP_CheckpointName.text = checkpoint.Name;
-                TMP_SpeedrunTimes.text = GetTimes(checkpoint.Name);
                 
                 if (StartCheckpoint == null || checkpoint == StartCheckpoint)
                 {
+                    TMP_SpeedrunTimes.text = GetTimes(checkpoint.Name);
+                    TMP_SpeedrunTimes.gameObject.SetActive(true);
                     return;
                 }
                 
-                bActive = false;
-                LastRun.Destination = StartCheckpoint.Name;
-                LastRun.Time = Timer;
-
+                
                 RunTime newTime;
-                newTime.Destination = StartCheckpoint.Name;
+                newTime.Start = StartCheckpoint.Name;
+                newTime.Destination = checkpoint.Name;
                 newTime.Time = Timer;
                 
                 bool bTimeFound = false;
                 for(int i = 0; i < SpeedrunTimes.Count; i++)
                 {
-                    if (SpeedrunTimes[i].Destination == checkpoint.Name)
+                    if (SpeedrunTimes[i].Start == StartCheckpoint.Name && SpeedrunTimes[i].Destination == checkpoint.Name)
                     {
                         bTimeFound = true;
                         if (SpeedrunTimes[i].Time > Timer) // Update only if the new time is faster
@@ -94,7 +94,8 @@ namespace TOMBSATYR
                 StartCheckpoint = checkpoint;
                 Timer = 0f;
                 
-                TMP_SpeedrunTimes.text = GetTimes(StartCheckpoint.name);
+                TMP_SpeedrunTimes.text = GetTimes(checkpoint.Name);
+                TMP_SpeedrunTimes.gameObject.SetActive(true);
             }
         }
 
@@ -102,11 +103,12 @@ namespace TOMBSATYR
         {
             if (other.gameObject.TryGetComponent<Checkpoint>(out Checkpoint checkpoint))
             {
-                Times.transform.GetChild(0).gameObject.SetActive(false);
+                TMP_SpeedrunTimes.gameObject.SetActive(false);
 
                 HandleCoroutine();
                 StartCheckpoint = checkpoint;
                 bActive = true;
+                Timer = 0f;
             }
         }
 
@@ -116,6 +118,12 @@ namespace TOMBSATYR
             {
                 TextFade = StartCoroutine(FadeAndActivateText());
             }
+            else
+            {
+                StopCoroutine(FadeAndActivateText());
+                TextFade = StartCoroutine(FadeAndActivateText());
+            }
+            
         }
         
         private IEnumerator FadeAndActivateText()
@@ -164,7 +172,7 @@ namespace TOMBSATYR
             {
                 if (time.Destination == checkpointName)
                 {
-                    TimesText += "( " + time.Destination + " ) :: " + FormatTime(time.Time) + "\n"; // Format the time for better readability
+                    TimesText += "( " + time.Start + " ) :: " + FormatTime(time.Time) + "\n"; // Format the time for better readability
                 }
             }
 

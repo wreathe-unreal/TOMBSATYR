@@ -140,7 +140,9 @@ namespace TOMBSATYR
                 return;
             }
 
+            bConstantMotion = true;
             StartMoving();
+            
         }
     }
 }

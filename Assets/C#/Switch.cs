@@ -66,9 +66,9 @@ namespace TOMBSATYR
             // Update logic if needed
         }
 
-        private void OnTriggerEnter(Collider other)
+        private void OnTriggerStay(Collider other)
         {
-            if (other.GetComponent<CharacterBody>() != null && bSwitchedRecently == false)
+            if (other.GetComponent<CharacterBody>() != null && bSwitchedRecently == false && Input.GetButton("Interact"))
             {
                 ToggleSwitchState();
                 StartCoroutine(ToggleSwitchedRecentlyCoro());

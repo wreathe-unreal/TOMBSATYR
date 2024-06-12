@@ -44,14 +44,14 @@ namespace TOMBSATYR
 
         private float DefaultJumpSpeed = 14.6f;
         
-        private float FrameFallVelocity = 0f;
 
         private float DefaultJumpApex;
         private Contact InitialWallRunContact;
         private bool bCanWallRun = true;
         private float WALLRUN_DISPLACEMENT = .65f;
         public GameObject DustPlume;
-        
+
+        private Queue<float> QFallVelocities = new Queue<float>();
         private LineRenderer LineRenderer;
 
         public System.Action<float> OnHighJumpPerformed;
@@ -99,7 +99,11 @@ namespace TOMBSATYR
 
         private void FixedUpdate()
         {
-            FrameFallVelocity = Controller.Velocity.y;
+            if (QFallVelocities.Count >= 5)
+            {
+                QFallVelocities.Dequeue();
+            }
+            QFallVelocities.Enqueue(Controller.PreSimulationVelocity.y);
         }
 
         void Update()
@@ -108,6 +112,20 @@ namespace TOMBSATYR
         }
 
 
+        public float MaxRecentVelocityVertical()
+        {
+            float HighestRecentFallingVelocity = 0f;
+            foreach (float v in QFallVelocities)
+            {
+                if (v < HighestRecentFallingVelocity) //less than for negative maximum
+                {
+                    HighestRecentFallingVelocity = v;
+                }
+            }
+
+            return HighestRecentFallingVelocity;
+        }
+        
         public bool IsRunPressed()
         {
             return Input.GetButton("Run") || Input.GetAxis("RunAxis") > FloatAction.DEADZONE; 
@@ -293,11 +311,11 @@ namespace TOMBSATYR
 
         private void SpawnPlume(Vector3 obj)
         {
-            if (Mathf.Abs(FrameFallVelocity) >= 5f)
+            if (Mathf.Abs(MaxRecentVelocityVertical()) >= 5f)
             {
                 VisualEffect vfx = DustPlume.GetComponent<VisualEffect>();
-                float smokeSize = .10f + (.015f * (Mathf.Abs(FrameFallVelocity)));
-                float impactForce = 5f + Mathf.Abs(FrameFallVelocity) * 2f;
+                float smokeSize = .10f + (.015f * (Mathf.Abs(MaxRecentVelocityVertical())));
+                float impactForce = 5f + Mathf.Abs(MaxRecentVelocityVertical()) * 2f;
                 impactForce = Mathf.Clamp(impactForce, 10f, 150f);
                 smokeSize = Mathf.Clamp(smokeSize, .15f, .75f);
                 vfx.SetFloat("SmokeSize", smokeSize);
@@ -529,16 +547,16 @@ namespace TOMBSATYR
         
         private void CalculateFallDamage(Vector3 velocity)
         {
-            int fallDamage = (Mathf.Abs(FrameFallVelocity)) switch
+            int fallDamage = (Mathf.Abs(MaxRecentVelocityVertical())) switch
             {
-                < 20 => 0,
-                < 25 => -10,
-                < 30 => -12,
-                < 35 => -16,
+                < 30 => 0,
+                < 35 => -10,
+                < 40 => -12,
+                < 45 => -16,
                 _ => -20
             };
 
-            //print(Mathf.Abs(FrameFallVelocity));
+            print(Mathf.Abs(MaxRecentVelocityVertical()));
             PlayerRef.UpdateHealth(fallDamage);
         }
     }

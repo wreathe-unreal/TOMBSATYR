@@ -20,6 +20,7 @@ namespace TOMBSATYR
         public Image FadeToBlackImage;
         private Player PlayerRef;
 
+        public TextMeshProUGUI MoonText;
         public GameObject TutorialsRoot;
 
         private Coroutine FadeCoro = null;
@@ -39,6 +40,8 @@ namespace TOMBSATYR
 
             CurrentlyDisplayedHealth = PlayerRef.GetHealth();
             
+            UpdateMoons();
+
         }
         
         // Update is called once per frame
@@ -156,6 +159,11 @@ namespace TOMBSATYR
         public void HideTutorial(string tutorialParentName)
         {
             TutorialsRoot.transform.Find(tutorialParentName).gameObject.SetActive(false);
+        }
+
+        public void UpdateMoons()
+        {
+            MoonText.text = "x " + PlayerRef.NumberOfMoonsCollected();
         }
     }
 }

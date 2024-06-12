@@ -14,8 +14,9 @@ namespace TOMBSATYR
     
     public class TOMBSATYR_Config : MonoBehaviour
     {
-
         public static float Volume = 1f;
+        public static float GamepadSense = 4f;
+        public static float MouseSense = .8f;
         public static EInputControlType ControlType = EInputControlType.Gamepad;
         private Camera3D MainCamera;
         
@@ -34,7 +35,11 @@ namespace TOMBSATYR
         // Update is called once per frame
         void Update()
         {
-
+            if (MainCamera != null)
+            {
+                MainCamera.GamepadSensitivity = GamepadSense;
+                MainCamera.MouseSensitivity = MouseSense;
+            }
         }
 
         public static void ModifyVolume(float modifier)
@@ -49,6 +54,16 @@ namespace TOMBSATYR
             ControlType = controlType;
 
             MainCamera.bGamepad = (ControlType == EInputControlType.Gamepad);
+        }
+
+        public void SetGamepadSensitivity(float newsense)
+        {
+            GamepadSense = newsense;
+        }
+
+        public void SetMouseSensitivity(float newsense)
+        {
+            MouseSense = newsense;
         }
     }
 }

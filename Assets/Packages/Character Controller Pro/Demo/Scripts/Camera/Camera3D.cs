@@ -16,7 +16,9 @@ namespace Lightbug.CharacterControllerPro.Demo
         [Header("Sensitivity")]
         public bool bGamepad = true;
 
-        public float GamepadSensitivity { get; set; } = 5f;
+        public float GamepadSensitivity = 5f;
+        public float MouseSensitivity = .5f;
+    
         
         [Header("Inputs")]
 
@@ -218,7 +220,8 @@ namespace Lightbug.CharacterControllerPro.Demo
             currentDistanceToTarget = distanceToTarget;
             smoothedDistanceToTarget = currentDistanceToTarget;
 
-            viewReference.rotation = targetTransform.rotation;
+
+            viewReference.rotation = targetTransform.rotation * Quaternion.AngleAxis(90, Vector3.up);
             viewReference.Rotate(Vector3.right, initialPitch);
 
             lerpedHeight = characterActor.BodySize.y;
@@ -242,6 +245,7 @@ namespace Lightbug.CharacterControllerPro.Demo
             Vector2 mouseData = inputHandlerSettings.InputHandler.GetVector2(mouseAxes);
 
             gamepadData *= GamepadSensitivity;
+            mouseData *= MouseSensitivity;
             
             if (updatePitch)
             {
@@ -270,7 +274,13 @@ namespace Lightbug.CharacterControllerPro.Demo
 
         void OnTeleport(Vector3 position, Quaternion rotation)
         {
-            viewReference.rotation = rotation;
+            
+
+
+            viewReference.rotation = targetTransform.rotation * Quaternion.AngleAxis(90, Vector3.up);
+            viewReference.Rotate(Vector3.right, initialPitch);
+            
+            
             transform.rotation = viewReference.rotation;
 
             lerpedCharacterUp = characterActor.Up;

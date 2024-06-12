@@ -45,6 +45,7 @@ namespace TOMBSATYR
         public float SlideStaminaDrain = 25f;
         public float StaminaRegen = 8;
         public float StaminaConsumed = 0f;
+        private int MoonsCollected = 0;
         
         public float TorchSearchRadius = 45f;
         public float CheckpointSearchRadius = 90f;
@@ -63,6 +64,7 @@ namespace TOMBSATYR
         private bool bHighJumpExit = false;
 
         public System.Action<bool> OnTeleport; //true if player is alive
+        public System.Action OnDeath;
 
         // Start is called before the first frame update
         void Start()
@@ -88,6 +90,16 @@ namespace TOMBSATYR
                 FindCheckpointAndGo();
                 FindTorchSendFairy();
             }
+        }
+
+        public void CollectMoon()
+        {
+            MoonsCollected++;
+        }
+
+        public int NumberOfMoonsCollected()
+        {
+            return MoonsCollected;
         }
         
         public float GetNormalizedStamina()
@@ -263,7 +275,7 @@ namespace TOMBSATYR
 
             if (Health == 0)
             {
-                OnDeath();
+                Death();
             }
 
         }
@@ -275,23 +287,24 @@ namespace TOMBSATYR
 
             if (GetHealth() > 0)
             {
-                OnReset();
+                Reset();
                 return;
             }
 
             if (Health <= 0)
             {
-                OnDeath();
+                Death();
             }
         }
 
-        public void OnReset()
+        public void Reset()
         {
             ScreenFader.Respawn(ERespawnType.Reset, GetCurrentResetpoint());
         }
 
-        private void OnDeath()
+        private void Death()
         {
+            OnDeath?.Invoke();
             ScreenFader.Respawn(ERespawnType.GameOver, (Resetpoint)GetCurrentCheckpoint());
         }
 
@@ -344,7 +357,7 @@ namespace TOMBSATYR
                 OnTeleport?.Invoke(true);
             }
             
-            Controller.Teleport(CurrentCheckpoint.GetSpawn().position, CurrentCheckpoint.GetSpawn().rotation);
+            Controller.Teleport(CurrentCheckpoint.GetSpawn().position, CurrentCheckpoint.GetSpawn().localRotation);
             Health = HEALTH_MAX;
             Stamina = STAMINA_MAX;
         }

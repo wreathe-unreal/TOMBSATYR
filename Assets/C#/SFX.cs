@@ -21,7 +21,8 @@ namespace TOMBSATYR
         private Metacontroller Metacontroller;
         private OptionsMenu Options;
         private LedgeHanging LedgeHang;
-        
+
+        [SerializeField] public AudioClip deathSFX;
         [SerializeField] public AudioClip jumpSFX;
         [SerializeField] public AudioClip climbUp;
         [SerializeField]  public AudioClip creepyGlitter;
@@ -66,7 +67,7 @@ namespace TOMBSATYR
                 Metacontroller.OnHighJumpPerformed += HighJumpAudio;
 
                 //secretfound event on secret
-                //OnSecretFound += SecretFoundAudio(.0f);
+                Moon.OnMoonCollected += SecretFoundAudio;
                 //on long jump event on metacontroller
                 Metacontroller.OnLongJumpPerformed += LongJumpAudio;
 
@@ -101,8 +102,9 @@ namespace TOMBSATYR
                 //fairy laugh event on fairy
                 FairyRef.OnUnstuck += UnstuckFairyAudio;
 
-               
 
+
+                PlayerRef.OnDeath += DeathAudio;
               
                 //on teleport event on player
                 PlayerRef.OnTeleport += TeleportAudio;
@@ -172,7 +174,6 @@ namespace TOMBSATYR
 
         private void LandedAudio(Vector3 vector3)
         {
-            print(Controller.VerticalVelocity.magnitude);
             PlaySound(landing, Mathf.Clamp(Controller.VerticalVelocity.magnitude / 14f, 0.05f, .25f));
         }
 
@@ -195,6 +196,11 @@ namespace TOMBSATYR
         {
         }
 
+        private void DeathAudio()
+        {
+            PlaySound(deathSFX, .5f);
+        }
+        
         private void UnstuckFairyAudio()
         {
             PlaySound(fairyLaugh, .1f);
@@ -208,29 +214,32 @@ namespace TOMBSATYR
         private void HighJumpAudio(float staminaDrained)
         {
             PlaySound(jumpGrunt, .1f);
-            PlaySound(staminaDrain, staminaDrained); // Placeholder for High Jump Audio, replace with actual clip if available
+            PlaySound(wallJump, .2f);
+            PlaySound(staminaDrain, Mathf.Clamp(staminaDrained+.5f, .5f, 1f)); // Placeholder for High Jump Audio, replace with actual clip if available
         }
 
-        private void SecretFoundAudio(float volume)
+        private void SecretFoundAudio()
         {
-            PlaySound(secret, volume);
+            PlaySound(secret, .7f);
         }
 
         private void LongJumpAudio(float staminaDrained)
         {
             PlaySound(jumpGrunt, .1f);
-            PlaySound(staminaDrain, staminaDrained); // Placeholder for Long Jump Audio, replace with actual clip if available
+            PlaySound(wallJump, .6f);
+            PlaySound(staminaDrain, Mathf.Clamp(staminaDrained+.5f, .5f, 1f)); // Placeholder for Long Jump Audio, replace with actual clip if available
         }
 
         private void WallJumpAudio()
         {
             PlaySound(jumpGrunt, .1f);
-            PlaySound(wallJump);
+            PlaySound(staminaDrain, .2f);
+            PlaySound(wallJump, .1f);
         }
 
         private void TeleportAudio(bool b)
         {
-            PlaySound(teleport, .1f);
+            PlaySound(teleport, .2f);
         }
 
         private void UISelectAudio()

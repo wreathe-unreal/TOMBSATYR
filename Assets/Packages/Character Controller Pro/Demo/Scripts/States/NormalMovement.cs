@@ -4,7 +4,6 @@ using UnityEngine;
 using Lightbug.CharacterControllerPro.Core;
 using Lightbug.Utilities;
 using Lightbug.CharacterControllerPro.Implementation;
-using Unity.Plastic.Newtonsoft.Json.Serialization;
 using UnityEngine.TextCore.Text;
 
 namespace Lightbug.CharacterControllerPro.Demo
