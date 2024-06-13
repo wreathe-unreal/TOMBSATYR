@@ -249,7 +249,7 @@ namespace TOMBSATYR
                 return;
             }
 
-            if (CharacterMovement.IsSliding() == false)
+            if (CharacterMovement.IsSliding() == false && Controller.IsStable && Controller.IsGrounded)
             {
                 CharacterMovement.SetSliding(true);
                 /* below we steal the code from the controller for crouching adjusting character height */
@@ -264,6 +264,7 @@ namespace TOMBSATYR
                 /* above we steal the code from the controller for crouching adjusting character height */
             
                 //push the player forward
+                
                 CharacterMovement.lookingDirectionParameters.notGroundedLookingDirectionMode = LookingDirectionParameters.LookingDirectionMovementSource.Velocity;
                 float forceMagnitude = SlideForce * PlayerRef.GetConsumedStaminaRatio();
                 PhysicsBody.RigidbodyComponent.AddForce(Controller.Forward * forceMagnitude, true, true);

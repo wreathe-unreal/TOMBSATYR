@@ -813,7 +813,7 @@ namespace Lightbug.CharacterControllerPro.Core
                 groundTriggerCollider3D = gameObject.AddComponent<SphereCollider>();
                 groundTriggerCollider3D.hideFlags = HideFlags.NotEditable;
                 groundTriggerCollider3D.isTrigger = true;
-                groundTriggerCollider3D.radius = BodySize.x / 2f;
+                groundTriggerCollider3D.radius = BodySize.x; // /2f divide by 2 previously
                 groundTriggerCollider3D.center = Vector3.up * (BodySize.x / 2f - CharacterConstants.GroundTriggerOffset);
 
                 Physics.IgnoreCollision(GetComponent<CapsuleCollider>(), groundTriggerCollider3D, true);
@@ -1805,8 +1805,8 @@ namespace Lightbug.CharacterControllerPro.Core
         {
             float verticalOffset = IsStable ? Mathf.Max(StepOffset, CharacterConstants.ColliderMinBottomOffset) : 0f;
 
-            float radius = BodySize.x / 2f;
-            float height = BodySize.y - verticalOffset;
+            float radius = BodySize.x;// divided by 2 aka  / 2f;
+            float height = BodySize.y; //- verticalOffset;
 
             ColliderComponent.Size = new Vector2(2f * radius, height);
             ColliderComponent.Offset = CustomUtilities.Multiply(Vector2.up, verticalOffset + height / 2f);
